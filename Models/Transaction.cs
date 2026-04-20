@@ -29,6 +29,10 @@ public class Transaction
     public DateTime UploadTimestamp { get; set; } = DateTime.Now;
     public int? MatchedTransactionId { get; set; }
     public string? Category { get; set; }
+
+    /// <summary>Credit or Debit (SRS 3.2.2)</summary>
+    public string? TransactionType { get; set; }
+
     [Required]
     public int BatchId { get; set; }
 

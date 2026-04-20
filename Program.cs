@@ -20,17 +20,21 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 6;
-    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.MaxFailedAccessAttempts = 5;        // FR-03
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5); // FR-03: lockout duration
+    options.Lockout.AllowedForNewUsers = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// 4. COOKIE SETTINGS (Custom Login Path)
+// 4. COOKIE SETTINGS (Custom Login Path + 30-minute idle timeout FR-05)
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/Account/AccessDenied";
+    options.SlidingExpiration = true;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // FR-05: auto session timeout
 });
 
 // 5. REGISTER CUSTOM SERVICES

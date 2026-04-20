@@ -73,6 +73,40 @@ namespace AFTRS.Migrations
                     b.ToTable("CategorizationRules");
                 });
 
+            modelBuilder.Entity("AFTRS.Models.FileUploadRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BatchId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FileUploadRecords");
+                });
+
             modelBuilder.Entity("AFTRS.Models.FinancialAuditLog", b =>
                 {
                     b.Property<int>("Id")
@@ -202,6 +236,9 @@ namespace AFTRS.Migrations
 
                     b.Property<DateTime>("TransactionDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("TransactionType")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UploadTimestamp")
                         .HasColumnType("datetime2");

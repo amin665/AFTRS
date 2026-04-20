@@ -39,6 +39,9 @@
                 <a asp-controller="Strategic" asp-action="Archive" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
                     <i class="fa-solid fa-box-archive mr-3"></i> Archive
                 </a>
+                <a asp-controller="Help" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
+                    <i class="fa-solid fa-circle-question mr-3"></i> Help / CSV Guide
+                </a>
             }
 
             @if (User.IsInRole("Admin"))

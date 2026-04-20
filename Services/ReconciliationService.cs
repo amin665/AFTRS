@@ -1,16 +1,20 @@
 using AFTRS.Data;
 using AFTRS.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace AFTRS.Services;
 
 public class ReconciliationService
 {
     private readonly ApplicationDbContext _context;
+    private readonly decimal _toleranceThreshold;
 
-    public ReconciliationService(ApplicationDbContext context)
+    public ReconciliationService(ApplicationDbContext context, IConfiguration configuration)
     {
         _context = context;
+        // SRS 2.1.7: Tolerance threshold (default 0.05 LYD)
+        _toleranceThreshold = configuration.GetValue<decimal>("AppSettings:ToleranceThreshold", 0.05m);
     }
 
     // 1. LEVENSHTEIN DISTANCE ALGORITHM (Requirement FR-11)
@@ -47,7 +51,7 @@ public class ReconciliationService
 
         foreach (var ledger in ledgerItems)
         {
-            // LEVEL 1: EXACT MATCH (Date, Amount, Reference)
+            // LEVEL 1: EXACT MATCH (Date, Amount, Reference) — FR-10
             var exactMatch = bankItems.FirstOrDefault(b => 
                 b.TransactionDate.Date == ledger.TransactionDate.Date && 
                 b.Amount == ledger.Amount && 
@@ -60,10 +64,11 @@ public class ReconciliationService
                 continue;
             }
 
-            // LEVEL 2: FUZZY MATCH (Amount matches, Description similarity > 80%)
+            // LEVEL 2: FUZZY MATCH — FR-11
+            // Amount must match within tolerance threshold (SRS 2.1.7), description similarity > 80%
             var fuzzyMatch = bankItems.FirstOrDefault(b => 
-                b.Amount == ledger.Amount && 
                 b.Status == "Unmatched" &&
+                Math.Abs(b.Amount - ledger.Amount) <= _toleranceThreshold &&
                 CalculateSimilarity(ledger.Description, b.Description) >= 0.80);
 
             if (fuzzyMatch != null)
