@@ -1,0 +1,29 @@
+@model IEnumerable<AFTRS.Models.FinancialAuditLog>
+<div class="p-6">
+    <h1 class="text-2xl font-bold mb-6 text-blue-800">Financial Audit Trail (UC-16)</h1>
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 text-sm">
+        <strong>Note:</strong> This record is immutable. As per SRS, manual matches require a justification comment.
+    </div>
+    <table class="min-w-full bg-white rounded-lg shadow">
+    <thead class="bg-blue-900 text-white">
+        <tr>
+            <th class="py-3 px-4 text-left">Timestamp</th>
+            <th class="py-3 px-4 text-left">Batch Name</th> <!-- NEW COLUMN -->
+            <th class="py-3 px-4 text-left">Performed By</th>
+            <th class="py-3 px-4 text-left">Details (L | B)</th>
+            <th class="py-3 px-4 text-left">Justification</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y">
+        @foreach (var entry in Model) {
+            <tr>
+                <td class="py-3 px-4 text-sm text-gray-500">@entry.Timestamp.ToString("g")</td>
+                <td class="py-3 px-4 font-semibold text-blue-700">@entry.BatchName</td> <!-- DATA -->
+                <td class="py-3 px-4 font-medium">@entry.UserEmail</td>
+                <td class="py-3 px-4 text-xs">ID: @entry.LedgerTransactionId | ID: @entry.BankTransactionId</td>
+                <td class="py-3 px-4 italic text-gray-600">"@entry.Justification"</td>
+            </tr>
+        }
+    </tbody>
+</table>
+</div>

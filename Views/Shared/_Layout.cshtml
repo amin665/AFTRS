@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AFTRS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- SIDEBAR -->
+    <aside class="fixed inset-y-0 left-0 bg-slate-900 w-64 transition-transform duration-300 transform -translate-x-full md:translate-x-0 z-50" id="sidebar">
+        <div class="flex items-center justify-center h-16 bg-slate-950">
+            <span class="text-white text-2xl font-black tracking-widest">AFTRS</span>
+        </div>
+        
+        <nav class="mt-5 px-4 space-y-2">
+            <!-- Common Home -->
+            <a asp-controller="Home" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
+                <i class="fa-solid fa-gauge-high mr-3"></i> Dashboard
+            </a>
+
+            @if (User.IsInRole("FinancialManager") || User.IsInRole("Admin"))
+            {
+                <div class="text-xs font-bold text-gray-500 uppercase mt-6 mb-2 px-4">Financial Operations</div>
+                <a asp-controller="Import" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
+                    <i class="fa-solid fa-file-import mr-3"></i> Data Import
+                </a>
+                <a asp-controller="Reconcile" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
+                    <i class="fa-solid fa-microchip mr-3"></i> Run Engine
+                </a>
+                <a asp-controller="Resolve" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
+                    <i class="fa-solid fa- screwdriver-wrench mr-3"></i> Discrepancies
+                </a>
+                <a asp-controller="Strategic" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
+                    <i class="fa-solid fa-chart-line mr-3"></i> Intelligence
+                </a>
+                <a asp-controller="Strategic" asp-action="Archive" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
+                    <i class="fa-solid fa-box-archive mr-3"></i> Archive
+                </a>
+            }
+
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="text-xs font-bold text-gray-500 uppercase mt-6 mb-2 px-4">Admin & Security</div>
+                <a asp-controller="Admin" asp-action="SecurityLogs" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
+                    <i class="fa-solid fa-shield-halved mr-3"></i> Security Logs
+                </a>
+                <a asp-controller="Admin" asp-action="AuditTrail" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
+                    <i class="fa-solid fa-list-check mr-3"></i> Audit Trail
+                </a>
+            }
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="md:ml-64 flex flex-col min-h-screen">
+        
+        <!-- HEADER -->
+        <header class="h-16 bg-white border-b flex items-center justify-between px-8 sticky top-0 z-40">
+            <button class="md:hidden text-gray-600" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            
+            <div class="flex items-center space-x-4 ml-auto">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-bold text-gray-800">@User.Identity?.Name</p>
+                    <p class="text-xs text-gray-500 uppercase">@((User.IsInRole("Admin")) ? "System Administrator" : "Financial Manager")</p>
+                </div>
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    <button type="submit" class="bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 p-2 rounded-full transition">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <!-- PAGE BODY -->
+        <main class="p-8 flex-grow">
+            @RenderBody()
+        </main>
+
+        <footer class="p-8 text-center text-gray-400 text-sm border-t bg-white">
+            &copy; 2026 AFTRS - Libyan International Medical University Capstone Project
+        </footer>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

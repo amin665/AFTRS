@@ -1,0 +1,143 @@
+@model IEnumerable<AFTRS.Models.Budget>
+@{
+    var actuals = ViewBag.ActualSpending as Dictionary<string, decimal> ?? new Dictionary<string, decimal>();
+    var rules = ViewBag.Rules as IEnumerable<AFTRS.Models.CategorizationRule> ?? new List<AFTRS.Models.CategorizationRule>();
+}
+
+<div class="p-6">
+    @if (TempData["Error"] != null)
+{
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm flex justify-between">
+        <span><i class="fa-solid fa-triangle-exclamation mr-2"></i> @TempData["Error"]</span>
+        <button onclick="this.parentElement.remove()" class="text-red-500 font-bold">&times;</button>
+    </div>
+}
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Strategic Intelligence</h1>
+        
+        <!-- UC-10: Trigger Auto-Categorization -->
+        <form asp-action="AutoCategorize" method="post">
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg transition flex items-center">
+                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Trigger Auto-Categorization (UC-10)
+            </button>
+        </form>
+    </div>
+
+    @if (TempData["Msg"] != null)
+    {
+        <div class="bg-purple-100 border-l-4 border-purple-500 text-purple-700 p-4 mb-6 rounded shadow-sm">
+            @TempData["Msg"]
+        </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- LEFT COLUMN: Configurations -->
+        <div class="space-y-8">
+            
+            <!-- UC-11: Set Budget Targets -->
+            <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-600">
+                <h2 class="text-xl font-bold mb-4">Set Monthly Budgets</h2>
+                <form asp-action="SetBudget" method="post" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Category Name</label>
+                        <select name="category" class="w-full border rounded-lg p-2 bg-gray-50">
+                            <option value="Rent">Rent</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Payroll">Payroll</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Taxes">Taxes</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Limit (LYD)</label>
+                        <input type="number" name="limit" step="0.01" class="w-full border rounded-lg p-2" required />
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700">Save Budget</button>
+                </form>
+            </div>
+
+            <!-- UC-09: Batch Create Template -->
+            <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-purple-600">
+                <h2 class="text-xl font-bold mb-4">Recurring Templates (UC-09)</h2>
+                <form asp-action="CreateRule" method="post" class="space-y-3">
+                    <input name="keyword" placeholder="Keyword (e.g. LTT)" class="w-full border rounded-lg p-2 text-sm" required />
+                    <input name="category" placeholder="Assign Category" class="w-full border rounded-lg p-2 text-sm" required />
+                    <button type="submit" class="w-full bg-purple-600 text-white py-2 rounded-lg font-bold text-sm">Create Template</button>
+                </form>
+
+                <div class="mt-6">
+                    <h3 class="font-bold text-gray-500 mb-2 uppercase text-xs">Active Rules</h3>
+                    <div class="max-h-40 overflow-y-auto space-y-2">
+                        @foreach(var rule in rules) {
+                            <div class="flex justify-between text-xs p-2 bg-gray-50 rounded border">
+                                <span class="font-bold">"@rule.Keyword"</span>
+                                <span class="text-purple-600">→ @rule.Category</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Visualization -->
+        <div class="lg:col-span-2 space-y-8">
+            <!-- Cash Flow Projection -->
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-bold mb-4 italic">Cash Flow Projection</h2>
+                <canvas id="cashFlowChart" height="150"></canvas>
+            </div>
+
+            <!-- Budget vs Actual (FR-19) -->
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-bold mb-4">Budget vs. Actual Spending</h2>
+                <div class="space-y-6">
+                    @if(!Model.Any()){
+                        <p class="text-gray-400 italic">No budgets defined for this month.</p>
+                    }
+                    @foreach (var b in Model) {
+                        var spent = actuals.ContainsKey(b.CategoryName) ? actuals[b.CategoryName] : 0;
+                        var percent = b.MonthlyLimit > 0 ? (spent / b.MonthlyLimit) * 100 : 0;
+                        var color = percent > 100 ? "bg-red-500" : "bg-green-500";
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium">@b.CategoryName</span>
+                                <span class="text-sm font-medium">@spent.ToString("N2") / @b.MonthlyLimit.ToString("N0") LYD</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="@color h-4 rounded-full transition-all duration-1000" style="width: @(percent > 100 ? 100 : percent)%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        fetch('/Strategic/GetChartData')
+            .then(res => res.json())
+            .then(data => {
+                const ctx = document.getElementById('cashFlowChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(d => d.date),
+                        datasets: [{
+                            label: 'Reconciled Cash Flow (LYD)',
+                            data: data.map(d => d.total),
+                            borderColor: 'rgb(37, 99, 235)',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            });
+    </script>
+}

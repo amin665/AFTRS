@@ -1,0 +1,51 @@
+<div class="p-6">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Financial Manager Dashboard</h1>
+            <p class="text-gray-500">Operational Overview & Session Management</p>
+        </div>
+        <div class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-bold">
+            Role: Financial Manager
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Card 1: Active Session -->
+        <div class="bg-white p-6 rounded-xl shadow border-l-4 border-blue-500 hover:shadow-md transition">
+            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Active Session</h3>
+            @if (ViewBag.ActiveBatch != null) {
+                <p class="text-2xl font-bold text-gray-800">@ViewBag.ActiveBatch.Name</p>
+                <p class="text-xs text-gray-400 mb-4">Started: @ViewBag.ActiveBatch.CreatedAt.ToShortDateString()</p>
+                <a asp-controller="Import" asp-action="Index" class="text-blue-600 text-sm font-bold hover:underline">Manage Uploads →</a>
+            } else {
+                <p class="text-xl text-gray-400 italic mb-4">No Active Session</p>
+                <a asp-controller="Import" asp-action="Index" class="bg-blue-600 text-white px-4 py-2 rounded text-sm inline-block">Start New Session</a>
+            }
+        </div>
+
+        <!-- Card 2: Discrepancies -->
+        <div class="bg-white p-6 rounded-xl shadow border-l-4 border-red-500 hover:shadow-md transition">
+            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Pending Discrepancies</h3>
+            <p class="text-4xl font-black text-red-600">@(ViewBag.UnmatchedCount ?? 0)</p>
+            <p class="text-xs text-gray-400 mb-4">Requires manual resolution</p>
+            <a asp-controller="Resolve" asp-action="Index" class="text-red-600 text-sm font-bold hover:underline">Open Workbench →</a>
+        </div>
+
+        <!-- Card 3: System Actions -->
+        <div class="bg-white p-6 rounded-xl shadow border-l-4 border-green-500 hover:shadow-md transition">
+            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Quick Actions</h3>
+            <ul class="mt-4 space-y-3">
+                <li>
+                    <a asp-controller="Reconcile" asp-action="Index" class="flex items-center text-gray-700 hover:text-green-600">
+                        <span class="mr-2">🚀</span> Run Reconciliation
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Strategic" asp-action="Index" class="flex items-center text-gray-700 hover:text-green-600">
+                        <span class="mr-2">📊</span> View Intelligence
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
