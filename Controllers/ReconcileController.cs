@@ -2,9 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using AFTRS.Services;
 using AFTRS.Data;
 using Microsoft.EntityFrameworkCore;
-using AFTRS.Models; 
+using AFTRS.Models;
+using Microsoft.AspNetCore.Authorization;
+
 namespace AFTRS.Controllers;
 
+[Authorize(Roles = "FinancialManager,Admin")]
 public class ReconcileController : Controller
 {
     private readonly ReconciliationService _reconcileService;

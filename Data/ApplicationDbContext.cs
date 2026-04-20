@@ -18,6 +18,5 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<Budget> Budgets { get; set; }
     public DbSet<ReconciliationBatch> ReconciliationBatches { get; set; } 
     public DbSet<CategorizationRule> CategorizationRules { get; set; }
-
-    // We will add more Tables (Transactions, Budgets) here in the next phases
+    public DbSet<FileUploadRecord> FileUploadRecords { get; set; }
 }

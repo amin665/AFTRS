@@ -82,31 +82,39 @@
 
         <!-- RIGHT COLUMN: Visualization -->
         <div class="lg:col-span-2 space-y-8">
-            <!-- Cash Flow Projection -->
+            <!-- Cash Flow Projection (FR-20) -->
             <div class="bg-white p-6 rounded-xl shadow-md">
-                <h2 class="text-xl font-bold mb-4 italic">Cash Flow Projection</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">Cash Flow – History &amp; 3-Month Projection (FR-20)</h2>
+                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">● Historical &nbsp; ● Projected</span>
+                </div>
                 <canvas id="cashFlowChart" height="150"></canvas>
             </div>
 
-            <!-- Budget vs Actual (FR-19) -->
+            <!-- Budget vs Actual Bar Chart (FR-19, UC-12) -->
             <div class="bg-white p-6 rounded-xl shadow-md">
-                <h2 class="text-xl font-bold mb-4">Budget vs. Actual Spending</h2>
-                <div class="space-y-6">
-                    @if(!Model.Any()){
-                        <p class="text-gray-400 italic">No budgets defined for this month.</p>
-                    }
+                <h2 class="text-xl font-bold mb-4">Budget vs. Actual Spending (UC-12)</h2>
+                @if(!Model.Any()){
+                    <p class="text-gray-400 italic">No budgets defined for this month.</p>
+                } else {
+                    <canvas id="budgetChart" height="120"></canvas>
+                }
+                <!-- Progress-bar variance summary -->
+                <div class="mt-6 space-y-4">
                     @foreach (var b in Model) {
                         var spent = actuals.ContainsKey(b.CategoryName) ? actuals[b.CategoryName] : 0;
                         var percent = b.MonthlyLimit > 0 ? (spent / b.MonthlyLimit) * 100 : 0;
                         var color = percent > 100 ? "bg-red-500" : "bg-green-500";
-
                         <div>
                             <div class="flex justify-between mb-1">
                                 <span class="text-sm font-medium">@b.CategoryName</span>
-                                <span class="text-sm font-medium">@spent.ToString("N2") / @b.MonthlyLimit.ToString("N0") LYD</span>
+                                <span class="text-sm @(percent > 100 ? "text-red-600 font-bold" : "text-gray-600")">
+                                    @spent.ToString("N2") / @b.MonthlyLimit.ToString("N0") LYD
+                                    @if (percent > 100) { <span class="ml-1 text-xs">⚠ Over Budget</span> }
+                                </span>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-4">
-                                <div class="@color h-4 rounded-full transition-all duration-1000" style="width: @(percent > 100 ? 100 : percent)%"></div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="@color h-3 rounded-full transition-all duration-1000" style="width: @(percent > 100 ? 100 : percent)%"></div>
                             </div>
                         </div>
                     }
@@ -119,25 +127,69 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // FR-20: Cash Flow Chart with historical + 3-month projection
         fetch('/Strategic/GetChartData')
             .then(res => res.json())
             .then(data => {
+                const histLabels = data.historical.map(d => d.date);
+                const histValues = data.historical.map(d => d.total);
+                const projLabels = data.projected.map(d => d.date);
+                const projValues = data.projected.map(d => d.total);
+
+                const allLabels = [...histLabels, ...projLabels];
+
                 const ctx = document.getElementById('cashFlowChart').getContext('2d');
                 new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: data.map(d => d.date),
-                        datasets: [{
-                            label: 'Reconciled Cash Flow (LYD)',
-                            data: data.map(d => d.total),
-                            borderColor: 'rgb(37, 99, 235)',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        }]
+                        labels: allLabels,
+                        datasets: [
+                            {
+                                label: 'Historical (LYD)',
+                                data: [...histValues, ...Array(projLabels.length).fill(null)],
+                                borderColor: 'rgb(37, 99, 235)',
+                                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                spanGaps: false
+                            },
+                            {
+                                label: '3-Month Projection (LYD)',
+                                data: [...Array(histLabels.length).fill(null), ...projValues],
+                                borderColor: 'rgb(234, 179, 8)',
+                                backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                                borderDash: [6, 3],
+                                fill: true,
+                                tension: 0.4,
+                                spanGaps: false
+                            }
+                        ]
                     },
                     options: { responsive: true }
                 });
             });
+
+        // UC-12: Budget vs Actual Bar Chart
+        const budgetCanvas = document.getElementById('budgetChart');
+        if (budgetCanvas) {
+            const budgetLabels = [@Html.Raw(string.Join(",", Model.Select(b => $"\"{b.CategoryName}\"")))];
+            const budgetLimits = [@Html.Raw(string.Join(",", Model.Select(b => b.MonthlyLimit)))];
+            const budgetActuals = [@Html.Raw(string.Join(",", Model.Select(b => {
+                var s = actuals.ContainsKey(b.CategoryName) ? actuals[b.CategoryName] : 0;
+                return s.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+            })))];
+
+            new Chart(budgetCanvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: budgetLabels,
+                    datasets: [
+                        { label: 'Budget Limit (LYD)', data: budgetLimits, backgroundColor: 'rgba(37, 99, 235, 0.6)' },
+                        { label: 'Actual Spending (LYD)', data: budgetActuals, backgroundColor: 'rgba(239, 68, 68, 0.6)' }
+                    ]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        }
     </script>
 }

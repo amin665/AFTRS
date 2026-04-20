@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AFTRS")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ec0b6e8444764e4e1457e0d1f45c99c122cbf63b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+54f868575f8c24da412753575062e8b6e3eff627")]
 [assembly: System.Reflection.AssemblyProductAttribute("AFTRS")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AFTRS")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

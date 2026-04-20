@@ -41,7 +41,11 @@ public class AccountController : Controller
             await _context.SaveChangesAsync();
 
             if (result.Succeeded) return RedirectToAction("Index", "Home");
-            
+            if (result.IsLockedOut)
+            {
+                ModelState.AddModelError("", "Account locked. Too many failed attempts. Please try again after 5 minutes.");
+                return View(model);
+            }
             ModelState.AddModelError("", "Invalid login attempt.");
         }
         return View(model);
@@ -68,6 +72,8 @@ public class AccountController : Controller
         return View(model);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
         await _signInManager.SignOutAsync();

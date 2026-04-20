@@ -46,24 +46,56 @@ public class StrategicController : Controller
         return RedirectToAction("Index");
     }
 
-    // FR-20: Cash Flow Projection Data
+    // FR-20: Cash Flow Projection Data – historical + 3-month forward projection
     public async Task<IActionResult> GetChartData()
-{
-    var transactions = await _context.Transactions
-        .Where(t => (t.Status == "Reconciled" || t.Status == "Resolved") && t.Source == "Ledger") // Add Source == "Ledger"
-        .ToListAsync();
+    {
+        var transactions = await _context.Transactions
+            .Where(t => (t.Status == "Reconciled" || t.Status == "Resolved") && t.Source == "Ledger")
+            .ToListAsync();
 
-    var data = transactions
-        .GroupBy(t => t.TransactionDate.Date)
-        .Select(g => new { 
-            Date = g.Key.ToString("yyyy-MM-dd"), 
-            Total = g.Sum(x => x.Amount) 
-        })
-        .OrderBy(x => x.Date)
-        .ToList();
+        // Historical daily totals
+        var historical = transactions
+            .GroupBy(t => t.TransactionDate.Date)
+            .Select(g => new { Date = g.Key, Total = g.Sum(x => x.Amount) })
+            .OrderBy(x => x.Date)
+            .ToList();
 
-    return Json(data);
-}
+        // FR-20: Project next 3 months based on average spending of previous 6 months
+        var sixMonthsAgo = DateTime.Today.AddMonths(-6);
+        var recentTransactions = transactions
+            .Where(t => t.TransactionDate >= sixMonthsAgo)
+            .ToList();
+
+        decimal avgMonthlySpending = 0;
+        if (recentTransactions.Any())
+        {
+            avgMonthlySpending = recentTransactions
+                .GroupBy(t => new { t.TransactionDate.Year, t.TransactionDate.Month })
+                .Select(g => g.Sum(x => x.Amount))
+                .DefaultIfEmpty(0)
+                .Average();
+        }
+
+        // Build projected data points (monthly average distributed over ~30 days)
+        var projectedPoints = new List<object>();
+        var today = DateTime.Today;
+        for (int m = 1; m <= 3; m++)
+        {
+            var projDate = today.AddMonths(m);
+            projectedPoints.Add(new
+            {
+                Date = projDate.ToString("yyyy-MM-dd"),
+                Total = Math.Round(avgMonthlySpending, 2),
+                IsProjection = true
+            });
+        }
+
+        return Json(new
+        {
+            Historical = historical.Select(h => new { Date = h.Date.ToString("yyyy-MM-dd"), Total = h.Total }),
+            Projected = projectedPoints
+        });
+    }
 
 public async Task<IActionResult> Archive(string searchTerm, DateTime? startDate, DateTime? endDate)
 {
