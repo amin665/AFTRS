@@ -12,6 +12,7 @@ public class ImportController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly ImportService _importService;
+    private const long MaxFileSizeBytes = 25 * 1024 * 1024; // FR-08: 25 MB
 
     public ImportController(ApplicationDbContext context, ImportService importService)
     {
@@ -25,8 +26,22 @@ public class ImportController : Controller
     {
         var activeBatch = await _context.ReconciliationBatches
             .FirstOrDefaultAsync(b => !b.IsFinalized);
-        
+
         ViewBag.ActiveBatchName = activeBatch?.Name;
+
+        // Upload history for active batch (wireframe B.1)
+        if (activeBatch != null)
+        {
+            ViewBag.UploadHistory = await _context.FileUploadRecords
+                .Where(r => r.BatchId == activeBatch.Id)
+                .OrderByDescending(r => r.UploadedAt)
+                .ToListAsync();
+        }
+        else
+        {
+            ViewBag.UploadHistory = new List<FileUploadRecord>();
+        }
+
         return View();
     }
 
@@ -60,16 +75,37 @@ public class ImportController : Controller
     {
         var currentBatch = await _context.ReconciliationBatches
             .FirstOrDefaultAsync(b => !b.IsFinalized);
-        
+
         if (currentBatch == null) return BadRequest("No active session found.");
         if (file == null || file.Length == 0) return BadRequest("No file uploaded.");
 
-        using var stream = file.OpenReadStream();
+        // FR-08: Reject files > 25 MB
+        if (file.Length > MaxFileSizeBytes)
+        {
+            TempData["Error"] = $"File '{file.FileName}' exceeds the 25 MB size limit. Please reduce the file size and try again.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // FR-09a: Compute SHA-256 hash and check for duplicate file
+        byte[] fileBytes;
+        using (var ms = new MemoryStream())
+        {
+            await file.CopyToAsync(ms);
+            fileBytes = ms.ToArray();
+        }
+        var fileHash = ImportService.ComputeSha256(fileBytes);
+        var hashError = await _importService.CheckFileHashAsync(file.FileName, fileHash, sourceType, currentBatch.Id);
+        if (hashError != null)
+        {
+            TempData["Error"] = hashError;
+            return RedirectToAction(nameof(Index));
+        }
+
         var extension = Path.GetExtension(file.FileName).ToLower();
-        
-        // Use the new Tuple-based result from the updated ImportService
+
         (List<Transaction> Data, string? Error) result;
 
+        using var stream = new MemoryStream(fileBytes);
         if (extension == ".csv")
         {
             result = await _importService.ParseCsvWithValidation(stream, sourceType);
@@ -84,23 +120,25 @@ public class ImportController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        // Handle validation errors (like duplicates)
         if (result.Error != null)
         {
             TempData["Error"] = result.Error;
             return RedirectToAction(nameof(Index));
         }
 
-        // Process successful imports
         foreach (var t in result.Data)
         {
             t.BatchId = currentBatch.Id;
         }
 
         _context.Transactions.AddRange(result.Data);
+
+        // FR-09a: Record the file upload
+        _importService.RecordFileUpload(file.FileName, fileHash, sourceType, User.Identity?.Name, currentBatch.Id);
+
         await _context.SaveChangesAsync();
 
-        TempData["Success"] = $"Successfully imported {result.Data.Count} records to {sourceType}.";
+        TempData["Success"] = $"Successfully imported {result.Data.Count} records from '{file.FileName}' to {sourceType}.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -116,6 +154,8 @@ public class ImportController : Controller
         {
             var transactions = _context.Transactions.Where(t => t.BatchId == currentBatch.Id);
             _context.Transactions.RemoveRange(transactions);
+            var uploadRecords = _context.FileUploadRecords.Where(r => r.BatchId == currentBatch.Id);
+            _context.FileUploadRecords.RemoveRange(uploadRecords);
             _context.ReconciliationBatches.Remove(currentBatch);
             await _context.SaveChangesAsync();
         }

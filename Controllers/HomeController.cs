@@ -41,11 +41,32 @@ public class HomeController : Controller
         // Stats for the Manager
         var activeBatch = await _context.ReconciliationBatches.FirstOrDefaultAsync(b => !b.IsFinalized);
         ViewBag.ActiveBatch = activeBatch;
-        
+
         if (activeBatch != null)
         {
-            ViewBag.UnmatchedCount = await _context.Transactions
-                .CountAsync(t => t.BatchId == activeBatch.Id && t.Status == "Unmatched");
+            var allTx = await _context.Transactions
+                .Where(t => t.BatchId == activeBatch.Id)
+                .ToListAsync();
+
+            int total = allTx.Count;
+            int matched = allTx.Count(t => t.Status == "Reconciled" || t.Status == "Resolved");
+            int unmatched = allTx.Count(t => t.Status == "Unmatched");
+            int ledgerCount = allTx.Count(t => t.Source == "Ledger");
+            int bankCount = allTx.Count(t => t.Source == "Bank");
+
+            ViewBag.UnmatchedCount = unmatched;
+            ViewBag.MatchedCount = matched;
+            ViewBag.TotalCount = total;
+            ViewBag.LedgerCount = ledgerCount;
+            ViewBag.BankCount = bankCount;
+            ViewBag.MatchedPercent = total > 0 ? Math.Round((double)matched / total * 100, 1) : 0;
+        }
+        else
+        {
+            ViewBag.UnmatchedCount = 0;
+            ViewBag.MatchedCount = 0;
+            ViewBag.TotalCount = 0;
+            ViewBag.MatchedPercent = 0;
         }
 
         return View();

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Cryptography;
 using AFTRS.Models;
 using AFTRS.Data;
 using CsvHelper;
@@ -16,49 +17,92 @@ public class ImportService
         _context = context;
     }
 
-    // New validation method to check for duplicates across the database
-    private async Task<string?> ValidateDuplicatesAsync(List<Transaction> newTransactions, string source)
+    /// <summary>Computes SHA-256 hex digest of a byte array (FR-09a).</summary>
+    public static string ComputeSha256(byte[] data)
     {
-        // Get all existing reference numbers for this source to compare
-        var existingRefs = await _context.Transactions
-            .Where(t => t.Source == source)
-            .Select(t => t.ReferenceNumber)
-            .Where(r => r != null)
+        var hash = SHA256.HashData(data);
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Checks whether this file (by name + SHA-256 hash) has already been uploaded (FR-09a).
+    /// </summary>
+    public async Task<string?> CheckFileHashAsync(string fileName, string fileHash, string source, int batchId)
+    {
+        var exists = await _context.FileUploadRecords
+            .AnyAsync(r => r.FileHash == fileHash || r.FileName == fileName);
+        if (exists)
+            return $"Duplicate file detected: '{fileName}' (or a file with identical content) has already been uploaded. Upload aborted to prevent data duplication.";
+        return null;
+    }
+
+    /// <summary>Records a file upload entry after successful import (FR-09a).</summary>
+    public void RecordFileUpload(string fileName, string fileHash, string source, string? uploadedBy, int batchId)
+    {
+        _context.FileUploadRecords.Add(new FileUploadRecord
+        {
+            FileName = fileName,
+            FileHash = fileHash,
+            Source = source,
+            UploadedBy = uploadedBy,
+            BatchId = batchId,
+            UploadedAt = DateTime.Now
+        });
+    }
+
+    /// <summary>
+    /// FR-09b: Checks individual transaction rows against existing records
+    /// using (ReferenceNumber + Date + Amount) to skip duplicates.
+    /// </summary>
+    private async Task<List<Transaction>> FilterDuplicateRowsAsync(List<Transaction> newTransactions, string source)
+    {
+        // Pull existing (Ref, Date, Amount) combos for this source
+        var existing = await _context.Transactions
+            .Where(t => t.Source == source && t.ReferenceNumber != null)
+            .Select(t => new { t.ReferenceNumber, t.TransactionDate, t.Amount })
             .ToListAsync();
 
-        foreach (var t in newTransactions)
-        {
-            if (!string.IsNullOrEmpty(t.ReferenceNumber) && existingRefs.Contains(t.ReferenceNumber))
-            {
-                return $"Duplicate detected: Reference Number '{t.ReferenceNumber}' already exists in the {source} records. Upload aborted to prevent data duplication.";
-            }
-        }
-        return null; // No duplicates found
+        var existingSet = existing
+            .Select(e => $"{e.ReferenceNumber}|{e.TransactionDate:yyyy-MM-dd}|{e.Amount}")
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return newTransactions
+            .Where(t => string.IsNullOrEmpty(t.ReferenceNumber) ||
+                        !existingSet.Contains($"{t.ReferenceNumber}|{t.TransactionDate:yyyy-MM-dd}|{t.Amount}"))
+            .ToList();
     }
 
     public async Task<(List<Transaction> Data, string? Error)> ParseCsvWithValidation(Stream fileStream, string source)
     {
         using var reader = new StreamReader(fileStream);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-        
-        try 
+
+        try
         {
-            var records = csv.GetRecords<dynamic>().Select(row => new Transaction
+            var records = csv.GetRecords<dynamic>().Select(row =>
             {
-                TransactionDate = DateTime.Parse(row.Date),
-                Description = row.Description,
-                ReferenceNumber = row.Reference,
-                Amount = decimal.Parse(row.Amount),
-                Source = source,
-                Status = "Unmatched"
+                var t = new Transaction
+                {
+                    TransactionDate = DateTime.Parse(row.Date),
+                    Description = row.Description,
+                    ReferenceNumber = row.Reference,
+                    Amount = decimal.Parse(row.Amount),
+                    Source = source,
+                    Status = "Unmatched"
+                };
+                // Optional Type column (Credit/Debit) — SRS 3.2.2
+                var dict = (IDictionary<string, object>)row;
+                if (dict.TryGetValue("Type", out var typeVal) && typeVal != null)
+                    t.TransactionType = typeVal.ToString();
+                return t;
             }).ToList();
 
-            var error = await ValidateDuplicatesAsync(records, source);
-            return error != null ? (new List<Transaction>(), error) : (records, null);
+            var filtered = await FilterDuplicateRowsAsync(records, source);
+            return (filtered, null);
         }
         catch (Exception)
         {
-            return (new List<Transaction>(), "Error parsing CSV. Please ensure columns are: Date, Description, Reference, Amount.");
+            return (new List<Transaction>(), "Error parsing CSV. Please ensure columns are: Date, Description, Reference, Amount. Type is optional.");
         }
     }
 
@@ -67,22 +111,31 @@ public class ImportService
         try
         {
             var rows = fileStream.Query(useHeaderRow: true).ToList();
-            var records = rows.Select(row => new Transaction
+            var records = rows.Select(row =>
             {
-                TransactionDate = Convert.ToDateTime(row.Date),
-                Description = Convert.ToString(row.Description),
-                ReferenceNumber = Convert.ToString(row.Reference),
-                Amount = Convert.ToDecimal(row.Amount),
-                Source = source,
-                Status = "Unmatched"
+                var dict = (IDictionary<string, object>)row;
+                string? typeVal = null;
+                if (dict.TryGetValue("Type", out var tv) && tv != null)
+                    typeVal = tv.ToString();
+
+                return new Transaction
+                {
+                    TransactionDate = Convert.ToDateTime(row.Date),
+                    Description = Convert.ToString(row.Description) ?? string.Empty,
+                    ReferenceNumber = Convert.ToString(row.Reference),
+                    Amount = Convert.ToDecimal(row.Amount),
+                    Source = source,
+                    Status = "Unmatched",
+                    TransactionType = typeVal
+                };
             }).ToList();
 
-            var error = await ValidateDuplicatesAsync(records, source);
-            return error != null ? (new List<Transaction>(), error) : (records, null);
+            var filtered = await FilterDuplicateRowsAsync(records, source);
+            return (filtered, null);
         }
         catch (Exception)
         {
-            return (new List<Transaction>(), "Error parsing Excel. Please ensure headers are: Date, Description, Reference, Amount.");
+            return (new List<Transaction>(), "Error parsing Excel. Please ensure headers are: Date, Description, Reference, Amount. Type is optional.");
         }
     }
 }
