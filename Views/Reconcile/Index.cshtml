@@ -7,20 +7,16 @@
     <div class="flex gap-2">
         <!-- The Run Engine Button -->
         <form asp-action="RunEngine" method="post" id="engineForm">
+            @Html.AntiForgeryToken()
             <button type="submit" id="runBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-lg transition flex items-center">
                 <span id="btnText">🚀 Run Reconciliation Engine</span>
                 <span id="spinner" class="hidden ml-2 animate-spin">
                     <i class="fa-solid fa-circle-notch"></i>
                 </span>
             </button>
-</form>
+ </form>
 
-        <!-- NEW: The Finalize Button (UC-14/Commit) -->
-        <form asp-action="FinalizeBatch" method="post" onsubmit="return confirm('This will archive this batch and clear your workbench. Proceed?')">
-            <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 shadow-lg transition">
-                ✅ Finalize & Archive
-            </button>
-        </form>
+        
     </div>
 </div>
 
@@ -29,10 +25,8 @@
         <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6">@TempData["Msg"]</div>
     }
 
-    <!-- SRS 3.2.1 Color-coding legend -->
     <div class="flex gap-4 mb-4 text-xs font-medium">
-        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-400 inline-block"></span> Reconciled (Auto)</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> Resolved (Manual)</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-400 inline-block"></span> Reconciled</span>
         <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-400 inline-block"></span> Unmatched</span>
     </div>
 
@@ -51,12 +45,9 @@
             <tbody class="divide-y divide-gray-200">
                 @foreach (var item in Model)
                 {
-                    // SRS 3.2.1: Green=Matched/Reconciled, Red=Unmatched, Yellow=Manually Resolved
-                    var statusColor = item.Status == "Reconciled" ? "bg-green-100 text-green-800"
-                                    : item.Status == "Resolved"   ? "bg-yellow-100 text-yellow-800"
-                                                                   : "bg-red-100 text-red-800";
+                    var statusColor = item.Status == "Reconciled" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">@item.TransactionDate.ToShortDateString()</td>
+                        <td class="px-6 py-4 whitespace-nowrap">@item.TransactionDate.ToString("dd/MM/yyyy")</td>
                         <td class="px-6 py-4">@item.Description</td>
                         <td class="px-6 py-4 font-bold">@item.Amount.ToString("N2") LYD</td>
                         <td class="px-6 py-4">
@@ -64,7 +55,7 @@
                                 @item.Source
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-xs text-gray-500">@(item.Category ?? "—")</td>
+                        <td class="px-6 py-4 text-xs text-gray-500">@(item.Category?.Name ?? "—")</td>
                         <td class="px-6 py-4">
                             <span class="px-3 py-1 rounded-full text-xs font-semibold @statusColor">
                                 @item.Status

@@ -1,27 +1,23 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AFTRS.Models;
 
-/// <summary>
-/// Tracks uploaded file names and SHA-256 hashes to prevent duplicate uploads (FR-09a).
-/// </summary>
 public class FileUploadRecord
 {
     [Key]
-    public int Id { get; set; }
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int FileUploadRecordID { get; set; }
 
     [Required]
     public string FileName { get; set; } = string.Empty;
 
     [Required]
-    public string FileHash { get; set; } = string.Empty; // SHA-256 hex digest
+    public string FileHash { get; set; } = string.Empty; // MD5/SHA-256 (we use SHA-256)
 
     [Required]
-    public string Source { get; set; } = string.Empty; // "Ledger" or "Bank"
+    public string Source { get; set; } = string.Empty; // Ledger / Bank
 
-    public string? UploadedBy { get; set; }
-
+    [Required]
     public DateTime UploadedAt { get; set; } = DateTime.Now;
-
-    public int BatchId { get; set; }
 }

@@ -1,7 +1,8 @@
-@model IEnumerable<AFTRS.Models.Budget>
+@model IEnumerable<AFTRS.Models.BudgetTarget>
 @{
-    var actuals = ViewBag.ActualSpending as Dictionary<string, decimal> ?? new Dictionary<string, decimal>();
-    var rules = ViewBag.Rules as IEnumerable<AFTRS.Models.CategorizationRule> ?? new List<AFTRS.Models.CategorizationRule>();
+    var actuals = ViewBag.ActualSpending as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+    var categories = ViewBag.Categories as IEnumerable<AFTRS.Models.Category> ?? new List<AFTRS.Models.Category>();
+    var now = DateTime.Today;
 }
 
 <div class="p-6">
@@ -15,12 +16,7 @@
     <div class="flex justify-between items-center mb-8">
         <h1 class="text-3xl font-bold text-gray-800">Strategic Intelligence</h1>
         
-        <!-- UC-10: Trigger Auto-Categorization -->
-        <form asp-action="AutoCategorize" method="post">
-            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg transition flex items-center">
-                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Trigger Auto-Categorization (UC-10)
-            </button>
-        </form>
+        <span class="text-xs bg-slate-100 text-slate-700 px-3 py-2 rounded-lg font-bold">Charts update from reconciled ledger data</span>
     </div>
 
     @if (TempData["Msg"] != null)
@@ -35,48 +31,41 @@
         <!-- LEFT COLUMN: Configurations -->
         <div class="space-y-8">
             
-            <!-- UC-11: Set Budget Targets -->
+            <!-- Budgeting: monthly targets per category -->
             <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-600">
                 <h2 class="text-xl font-bold mb-4">Set Monthly Budgets</h2>
                 <form asp-action="SetBudget" method="post" class="space-y-4">
+                    @Html.AntiForgeryToken()
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Category Name</label>
-                        <select name="category" class="w-full border rounded-lg p-2 bg-gray-50">
-                            <option value="Rent">Rent</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Payroll">Payroll</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="Taxes">Taxes</option>
+                        <select name="categoryId" class="w-full border rounded-lg p-2 bg-gray-50">
+                            @foreach (var c in categories)
+                            {
+                                <option value="@c.CategoryID">@c.Name</option>
+                            }
                         </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Month</label>
+                            <input type="number" name="targetMonth" min="1" max="12" value="@now.Month" class="w-full border rounded-lg p-2" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Year</label>
+                            <input type="number" name="targetYear" min="2000" max="2100" value="@now.Year" class="w-full border rounded-lg p-2" required />
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Limit (LYD)</label>
-                        <input type="number" name="limit" step="0.01" class="w-full border rounded-lg p-2" required />
+                        <input type="number" name="targetAmount" step="0.01" class="w-full border rounded-lg p-2" required />
                     </div>
                     <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700">Save Budget</button>
                 </form>
             </div>
 
-            <!-- UC-09: Batch Create Template -->
             <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-purple-600">
-                <h2 class="text-xl font-bold mb-4">Recurring Templates (UC-09)</h2>
-                <form asp-action="CreateRule" method="post" class="space-y-3">
-                    <input name="keyword" placeholder="Keyword (e.g. LTT)" class="w-full border rounded-lg p-2 text-sm" required />
-                    <input name="category" placeholder="Assign Category" class="w-full border rounded-lg p-2 text-sm" required />
-                    <button type="submit" class="w-full bg-purple-600 text-white py-2 rounded-lg font-bold text-sm">Create Template</button>
-                </form>
-
-                <div class="mt-6">
-                    <h3 class="font-bold text-gray-500 mb-2 uppercase text-xs">Active Rules</h3>
-                    <div class="max-h-40 overflow-y-auto space-y-2">
-                        @foreach(var rule in rules) {
-                            <div class="flex justify-between text-xs p-2 bg-gray-50 rounded border">
-                                <span class="font-bold">"@rule.Keyword"</span>
-                                <span class="text-purple-600">→ @rule.Category</span>
-                            </div>
-                        }
-                    </div>
-                </div>
+                <h2 class="text-xl font-bold mb-2">Heuristics Dictionary</h2>
+                <p class="text-sm text-gray-600">Auto-categorization uses <code>Category.KeywordRule</code> against transaction descriptions.</p>
             </div>
         </div>
 
@@ -91,7 +80,7 @@
                 <canvas id="cashFlowChart" height="150"></canvas>
             </div>
 
-            <!-- Budget vs Actual Bar Chart (FR-19, UC-12) -->
+            <!-- Budget vs Actual Bar Chart -->
             <div class="bg-white p-6 rounded-xl shadow-md">
                 <h2 class="text-xl font-bold mb-4">Budget vs. Actual Spending (UC-12)</h2>
                 @if(!Model.Any()){
@@ -102,14 +91,14 @@
                 <!-- Progress-bar variance summary -->
                 <div class="mt-6 space-y-4">
                     @foreach (var b in Model) {
-                        var spent = actuals.ContainsKey(b.CategoryName) ? actuals[b.CategoryName] : 0;
-                        var percent = b.MonthlyLimit > 0 ? (spent / b.MonthlyLimit) * 100 : 0;
+                        var spent = actuals.ContainsKey(b.CategoryID) ? actuals[b.CategoryID] : 0;
+                        var percent = b.TargetAmount > 0 ? (spent / b.TargetAmount) * 100 : 0;
                         var color = percent > 100 ? "bg-red-500" : "bg-green-500";
                         <div>
                             <div class="flex justify-between mb-1">
-                                <span class="text-sm font-medium">@b.CategoryName</span>
+                                <span class="text-sm font-medium">@b.Category?.Name</span>
                                 <span class="text-sm @(percent > 100 ? "text-red-600 font-bold" : "text-gray-600")">
-                                    @spent.ToString("N2") / @b.MonthlyLimit.ToString("N0") LYD
+                                    @spent.ToString("N2") / @b.TargetAmount.ToString("N2") LYD
                                     @if (percent > 100) { <span class="ml-1 text-xs">⚠ Over Budget</span> }
                                 </span>
                             </div>
@@ -127,13 +116,13 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // FR-20: Cash Flow Chart with historical + 3-month projection
-        fetch('/Strategic/GetChartData')
+        // Cash Flow Chart with historical + 3-month projection
+        fetch('/Strategic/GetCashFlowData')
             .then(res => res.json())
             .then(data => {
-                const histLabels = data.historical.map(d => d.date);
-                const histValues = data.historical.map(d => d.total);
-                const projLabels = data.projected.map(d => d.date);
+                const histLabels = data.past.map(d => `${d.year}-${String(d.month).padStart(2,'0')}`);
+                const histValues = data.past.map(d => d.total);
+                const projLabels = data.projected.map(d => `${d.year}-${String(d.month).padStart(2,'0')}`);
                 const projValues = data.projected.map(d => d.total);
 
                 const allLabels = [...histLabels, ...projLabels];
@@ -172,10 +161,10 @@
         // UC-12: Budget vs Actual Bar Chart
         const budgetCanvas = document.getElementById('budgetChart');
         if (budgetCanvas) {
-            const budgetLabels = [@Html.Raw(string.Join(",", Model.Select(b => $"\"{b.CategoryName}\"")))];
-            const budgetLimits = [@Html.Raw(string.Join(",", Model.Select(b => b.MonthlyLimit)))];
+            const budgetLabels = [@Html.Raw(string.Join(",", Model.Select(b => $"\"{b.Category?.Name}\"")))];
+            const budgetLimits = [@Html.Raw(string.Join(",", Model.Select(b => b.TargetAmount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))))];
             const budgetActuals = [@Html.Raw(string.Join(",", Model.Select(b => {
-                var s = actuals.ContainsKey(b.CategoryName) ? actuals[b.CategoryName] : 0;
+                var s = actuals.ContainsKey(b.CategoryID) ? actuals[b.CategoryID] : 0;
                 return s.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
             })))];
 
@@ -184,7 +173,7 @@
                 data: {
                     labels: budgetLabels,
                     datasets: [
-                        { label: 'Budget Limit (LYD)', data: budgetLimits, backgroundColor: 'rgba(37, 99, 235, 0.6)' },
+                        { label: 'Budget Target (LYD)', data: budgetLimits, backgroundColor: 'rgba(37, 99, 235, 0.6)' },
                         { label: 'Actual Spending (LYD)', data: budgetActuals, backgroundColor: 'rgba(239, 68, 68, 0.6)' }
                     ]
                 },

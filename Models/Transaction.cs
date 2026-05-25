@@ -6,36 +6,34 @@ namespace AFTRS.Models;
 public class Transaction
 {
     [Key]
-    public int Id { get; set; }
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int TransactionID { get; set; }
+
+    public int? CategoryID { get; set; }
+    public Category? Category { get; set; }
+
+    public int? MatchedTransactionID { get; set; }
+    public Transaction? MatchedTransaction { get; set; }
 
     [Required]
     public DateTime TransactionDate { get; set; }
 
     [Required]
+    [MaxLength(200)]
     public string Description { get; set; } = string.Empty;
 
+    [Required]
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal Amount { get; set; }
+
+    [MaxLength(50)]
     public string? ReferenceNumber { get; set; }
 
     [Required]
-    [Column(TypeName = "decimal(18,2)")] // Requirement 3.5.1: Accuracy
-    public decimal Amount { get; set; }
+    [MaxLength(20)]
+    public string Source { get; set; } = string.Empty; // Ledger / Bank
 
     [Required]
-    public string Source { get; set; } // "Bank" or "Ledger"
-
-    [Required]
-    public string Status { get; set; } = "Unmatched"; // Matched, Unmatched, Resolved
-
-    public DateTime UploadTimestamp { get; set; } = DateTime.Now;
-    public int? MatchedTransactionId { get; set; }
-    public string? Category { get; set; }
-
-    /// <summary>Credit or Debit (SRS 3.2.2)</summary>
-    public string? TransactionType { get; set; }
-
-    [Required]
-    public int BatchId { get; set; }
-
-    [ForeignKey("BatchId")]
-    public ReconciliationBatch? Batch { get; set; }
+    [MaxLength(20)]
+    public string Status { get; set; } = "Unmatched"; // Unmatched / Reconciled
 }

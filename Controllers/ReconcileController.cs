@@ -1,66 +1,45 @@
-using Microsoft.AspNetCore.Mvc;
-using AFTRS.Services;
 using AFTRS.Data;
-using Microsoft.EntityFrameworkCore;
+using AFTRS.Infrastructure;
 using AFTRS.Models;
-using Microsoft.AspNetCore.Authorization;
+using AFTRS.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AFTRS.Controllers;
 
-[Authorize(Roles = "FinancialManager,Admin")]
+[RoleAuthorize("Manager", "Admin")]
 public class ReconcileController : Controller
 {
-    private readonly ReconciliationService _reconcileService;
     private readonly ApplicationDbContext _context;
+    private readonly MatchingEngineService _matching;
+    private readonly HeuristicsEngineService _heuristics;
 
-    public ReconcileController(ReconciliationService reconcileService, ApplicationDbContext context)
+    public ReconcileController(ApplicationDbContext context, MatchingEngineService matching, HeuristicsEngineService heuristics)
     {
-        _reconcileService = reconcileService;
         _context = context;
+        _matching = matching;
+        _heuristics = heuristics;
     }
 
+    [HttpGet]
     public async Task<IActionResult> Index()
-{
-    var activeBatch = await _context.ReconciliationBatches.FirstOrDefaultAsync(b => !b.IsFinalized);
-    
-    if (activeBatch == null) {
-        return View(new List<Transaction>()); // Return empty list if no active batch
-    }
-
-    var transactions = await _context.Transactions
-        .Where(t => t.BatchId == activeBatch.Id)
-        .OrderByDescending(t => t.TransactionDate)
-        .ToListAsync();
-        
-    return View(transactions);
-}
-
-    [HttpPost]
-public async Task<IActionResult> RunEngine()
-{
-    // 1. Get the active batch
-    var currentBatch = await _context.ReconciliationBatches
-        .FirstOrDefaultAsync(b => !b.IsFinalized);
-
-    if (currentBatch == null) return BadRequest("No active session found.");
-
-    // 2. Pass the ID to the service
-    await _reconcileService.RunReconciliationAsync(currentBatch.Id);
-    
-    TempData["Msg"] = "Reconciliation Engine finished processing.";
-    return RedirectToAction("Index");
-}
-    [HttpPost]
-public async Task<IActionResult> FinalizeBatch()
-{
-    var currentBatch = await _context.ReconciliationBatches
-        .FirstOrDefaultAsync(b => !b.IsFinalized);
-
-    if (currentBatch != null)
     {
-        currentBatch.IsFinalized = true;
-        await _context.SaveChangesAsync();
+        var transactions = await _context.Transactions
+            .Include(t => t.Category)
+            .OrderByDescending(t => t.TransactionDate)
+            .ToListAsync();
+
+        return View(transactions);
     }
-    return RedirectToAction("Index", "Home"); // Go back to main dashboard
-}
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RunEngine()
+    {
+        var matched = await _matching.RunReconciliationAsync();
+        var categorized = await _heuristics.ApplyKeywordCategoriesAsync();
+
+        TempData["Msg"] = $"Engine complete: {matched} transaction pairs reconciled, {categorized} categorized.";
+        return RedirectToAction(nameof(Index));
+    }
 }

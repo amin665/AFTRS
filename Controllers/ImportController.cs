@@ -1,119 +1,78 @@
-using Microsoft.AspNetCore.Mvc;
 using AFTRS.Data;
+using AFTRS.Infrastructure;
 using AFTRS.Models;
 using AFTRS.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
 
 namespace AFTRS.Controllers;
 
-[Authorize(Roles = "FinancialManager,Admin")]
+[RoleAuthorize("Manager", "Admin")]
 public class ImportController : Controller
 {
     private readonly ApplicationDbContext _context;
-    private readonly ImportService _importService;
-    private const long MaxFileSizeBytes = 25 * 1024 * 1024; // FR-08: 25 MB
+    private readonly ImportService _import;
 
-    public ImportController(ApplicationDbContext context, ImportService importService)
+    private const long MaxFileSizeBytes = 25L * 1024L * 1024L;
+
+    public ImportController(ApplicationDbContext context, ImportService import)
     {
         _context = context;
-        _importService = importService;
+        _import = import;
     }
 
-    // GET: /Import
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var activeBatch = await _context.ReconciliationBatches
-            .FirstOrDefaultAsync(b => !b.IsFinalized);
-
-        ViewBag.ActiveBatchName = activeBatch?.Name;
-
-        // Upload history for active batch (wireframe B.1)
-        if (activeBatch != null)
-        {
-            ViewBag.UploadHistory = await _context.FileUploadRecords
-                .Where(r => r.BatchId == activeBatch.Id)
-                .OrderByDescending(r => r.UploadedAt)
-                .ToListAsync();
-        }
-        else
-        {
-            ViewBag.UploadHistory = new List<FileUploadRecord>();
-        }
-
+        ViewBag.UploadHistory = await _context.FileUploadRecords
+            .OrderByDescending(r => r.UploadedAt)
+            .Take(25)
+            .ToListAsync();
         return View();
     }
 
-    // POST: /Import/CreateBatch
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateBatch(string batchName)
-    {
-        if (string.IsNullOrWhiteSpace(batchName))
-        {
-            return RedirectToAction(nameof(Index));
-        }
-
-        var activeBatch = await _context.ReconciliationBatches
-            .FirstOrDefaultAsync(b => !b.IsFinalized);
-
-        if (activeBatch == null)
-        {
-            var newBatch = new ReconciliationBatch { Name = batchName };
-            _context.ReconciliationBatches.Add(newBatch);
-            await _context.SaveChangesAsync();
-        }
-
-        return RedirectToAction(nameof(Index));
-    }
-
-    // POST: /Import/Upload
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Upload(IFormFile file, string sourceType)
     {
-        var currentBatch = await _context.ReconciliationBatches
-            .FirstOrDefaultAsync(b => !b.IsFinalized);
+        if (file == null || file.Length == 0)
+            return BadRequest("No file uploaded.");
 
-        if (currentBatch == null) return BadRequest("No active session found.");
-        if (file == null || file.Length == 0) return BadRequest("No file uploaded.");
-
-        // FR-08: Reject files > 25 MB
         if (file.Length > MaxFileSizeBytes)
         {
-            TempData["Error"] = $"File '{file.FileName}' exceeds the 25 MB size limit. Please reduce the file size and try again.";
+            TempData["Error"] = $"File '{file.FileName}' exceeds the 25 MB size limit.";
             return RedirectToAction(nameof(Index));
         }
 
-        // FR-09a: Compute SHA-256 hash and check for duplicate file
-        byte[] fileBytes;
+        if (sourceType != "Ledger" && sourceType != "Bank")
+        {
+            TempData["Error"] = "Invalid source type.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        byte[] bytes;
         using (var ms = new MemoryStream())
         {
             await file.CopyToAsync(ms);
-            fileBytes = ms.ToArray();
+            bytes = ms.ToArray();
         }
-        var fileHash = ImportService.ComputeSha256(fileBytes);
-        var hashError = await _importService.CheckFileHashAsync(file.FileName, fileHash, sourceType, currentBatch.Id);
+
+        var hash = ImportService.ComputeSha256(bytes);
+        var hashError = await _import.CheckFileHashAsync(file.FileName, hash);
         if (hashError != null)
         {
             TempData["Error"] = hashError;
             return RedirectToAction(nameof(Index));
         }
 
-        var extension = Path.GetExtension(file.FileName).ToLower();
-
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         (List<Transaction> Data, string? Error) result;
+        using var stream = new MemoryStream(bytes);
 
-        using var stream = new MemoryStream(fileBytes);
-        if (extension == ".csv")
-        {
-            result = await _importService.ParseCsvWithValidation(stream, sourceType);
-        }
-        else if (extension == ".xlsx")
-        {
-            result = await _importService.ParseExcelWithValidation(stream, sourceType);
-        }
+        if (ext == ".csv")
+            result = await _import.ParseCsvWithValidation(stream, sourceType);
+        else if (ext == ".xlsx")
+            result = await _import.ParseExcelWithValidation(stream, sourceType);
         else
         {
             TempData["Error"] = "Invalid file type. Only .csv and .xlsx are supported.";
@@ -122,43 +81,43 @@ public class ImportController : Controller
 
         if (result.Error != null)
         {
-            TempData["Error"] = result.Error;
+            // If it's an Unbalanced warning, treat it as non-fatal.
+            if (result.Error.Contains("UNBALANCED", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["Warning"] = result.Error;
+            }
+            else
+            {
+                TempData["Error"] = result.Error;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        if (result.Data.Count == 0)
+        {
+            TempData["Error"] = "No new rows imported (all rows may be duplicates).";
             return RedirectToAction(nameof(Index));
         }
 
-        foreach (var t in result.Data)
-        {
-            t.BatchId = currentBatch.Id;
-        }
-
         _context.Transactions.AddRange(result.Data);
+        _import.RecordFileUpload(file.FileName, hash, sourceType);
 
-        // FR-09a: Record the file upload
-        _importService.RecordFileUpload(file.FileName, fileHash, sourceType, User.Identity?.Name, currentBatch.Id);
+        // Security log for upload.
+        int? userId = null;
+        var uid = User.FindFirst(AuthConstants.UserIdClaimType)?.Value;
+        if (uid != null) userId = int.Parse(uid);
+        _context.SecurityLogs.Add(new SecurityLog
+        {
+            UserID = userId,
+            IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
+            Action = "Upload",
+            IsSuccess = true,
+            Timestamp = DateTime.Now
+        });
 
         await _context.SaveChangesAsync();
 
-        TempData["Success"] = $"Successfully imported {result.Data.Count} records from '{file.FileName}' to {sourceType}.";
-        return RedirectToAction(nameof(Index));
-    }
-
-    // POST: /Import/ClearCurrentBatch
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ClearCurrentBatch()
-    {
-        var currentBatch = await _context.ReconciliationBatches
-            .FirstOrDefaultAsync(b => !b.IsFinalized);
-
-        if (currentBatch != null)
-        {
-            var transactions = _context.Transactions.Where(t => t.BatchId == currentBatch.Id);
-            _context.Transactions.RemoveRange(transactions);
-            var uploadRecords = _context.FileUploadRecords.Where(r => r.BatchId == currentBatch.Id);
-            _context.FileUploadRecords.RemoveRange(uploadRecords);
-            _context.ReconciliationBatches.Remove(currentBatch);
-            await _context.SaveChangesAsync();
-        }
+        TempData["Success"] = $"Imported {result.Data.Count} records from '{file.FileName}' ({sourceType}).";
         return RedirectToAction(nameof(Index));
     }
 }

@@ -7,7 +7,7 @@
                 <th class="py-3 px-4 text-left">Timestamp</th>
                 <th class="py-3 px-4 text-left">User</th>
                 <th class="py-3 px-4 text-left">IP Address</th>
-                <th class="py-3 px-4 text-left">Event</th>
+                <th class="py-3 px-4 text-left">Action</th>
                 <th class="py-3 px-4 text-left">Status</th>
             </tr>
         </thead>
@@ -15,12 +15,12 @@
             @foreach (var log in Model) {
                 <tr>
                     <td class="py-3 px-4">@log.Timestamp</td>
-                    <td class="py-3 px-4">@log.UserId</td>
+                    <td class="py-3 px-4">@log.User?.Username</td>
                     <td class="py-3 px-4">@log.IPAddress</td>
-                    <td class="py-3 px-4">@log.Event</td>
+                    <td class="py-3 px-4">@log.Action</td>
                     <td class="py-3 px-4">
-                        <span class="px-2 py-1 rounded @(log.Status == "Success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
-                            @log.Status
+                        <span class="px-2 py-1 rounded @(log.IsSuccess ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                            @(log.IsSuccess ? "Success" : "Failed")
                         </span>
                     </td>
                 </tr>

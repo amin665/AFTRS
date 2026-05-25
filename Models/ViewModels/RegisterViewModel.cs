@@ -14,5 +14,5 @@ public class RegisterViewModel
     public string ConfirmPassword { get; set; } = string.Empty;
 
     [Required]
-    public string Role { get; set; } = "FinancialManager"; // Default role
+    public string Role { get; set; } = "Manager"; // Manager / Admin
 }

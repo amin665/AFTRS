@@ -10,17 +10,12 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Card 1: Active Session -->
         <div class="bg-white p-6 rounded-xl shadow border-l-4 border-blue-500 hover:shadow-md transition">
-            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Active Session</h3>
-            @if (ViewBag.ActiveBatch != null) {
-                <p class="text-2xl font-bold text-gray-800">@ViewBag.ActiveBatch.Name</p>
-                <p class="text-xs text-gray-400 mb-4">Started: @ViewBag.ActiveBatch.CreatedAt.ToShortDateString()</p>
-                <a asp-controller="Import" asp-action="Index" class="text-blue-600 text-sm font-bold hover:underline">Manage Uploads →</a>
-            } else {
-                <p class="text-xl text-gray-400 italic mb-4">No Active Session</p>
-                <a asp-controller="Import" asp-action="Index" class="bg-blue-600 text-white px-4 py-2 rounded text-sm inline-block">Start New Session</a>
-            }
+            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Data Import</h3>
+            <p class="text-sm text-gray-500 mt-2">Upload Ledger and Bank files (CSV/XLSX). Duplicate files are blocked by SHA-256 hash.</p>
+            <div class="mt-4">
+                <a asp-controller="Import" asp-action="Index" class="text-blue-600 text-sm font-bold hover:underline">Open Import →</a>
+            </div>
         </div>
 
         <!-- Card 2: Discrepancies -->
@@ -49,34 +44,32 @@
         </div>
     </div>
 
-    @if (ViewBag.ActiveBatch != null && (ViewBag.TotalCount ?? 0) > 0)
+    @if ((ViewBag.TotalCount ?? 0) > 0)
     {
-        <!-- Reconciliation Progress Stats -->
         <div class="mt-8 bg-white p-6 rounded-xl shadow">
-            <h2 class="text-lg font-bold text-gray-700 mb-4">Current Session Progress</h2>
+            <h2 class="text-lg font-bold text-gray-700 mb-4">System Progress</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div class="bg-gray-50 rounded-lg p-4 text-center">
                     <p class="text-3xl font-black text-gray-800">@ViewBag.TotalCount</p>
                     <p class="text-xs text-gray-500 uppercase mt-1">Total Transactions</p>
                 </div>
                 <div class="bg-green-50 rounded-lg p-4 text-center">
-                    <p class="text-3xl font-black text-green-600">@ViewBag.MatchedCount</p>
-                    <p class="text-xs text-gray-500 uppercase mt-1">Matched</p>
+                    <p class="text-3xl font-black text-green-600">@ViewBag.ReconciledCount</p>
+                    <p class="text-xs text-gray-500 uppercase mt-1">Reconciled</p>
                 </div>
                 <div class="bg-red-50 rounded-lg p-4 text-center">
                     <p class="text-3xl font-black text-red-600">@ViewBag.UnmatchedCount</p>
                     <p class="text-xs text-gray-500 uppercase mt-1">Unmatched</p>
                 </div>
                 <div class="bg-blue-50 rounded-lg p-4 text-center">
-                    <p class="text-3xl font-black text-blue-600">@ViewBag.MatchedPercent%</p>
+                    <p class="text-3xl font-black text-blue-600">@ViewBag.MatchPercent%</p>
                     <p class="text-xs text-gray-500 uppercase mt-1">Match Rate</p>
                 </div>
             </div>
-            <!-- Progress Bar -->
             <div class="w-full bg-gray-200 rounded-full h-3">
-                <div class="bg-green-500 h-3 rounded-full transition-all duration-1000" style="width: @ViewBag.MatchedPercent%"></div>
+                <div class="bg-green-500 h-3 rounded-full transition-all duration-1000" style="width: @ViewBag.MatchPercent%"></div>
             </div>
-            <p class="text-xs text-gray-400 mt-1 text-right">@ViewBag.MatchedPercent% reconciled · @ViewBag.LedgerCount Ledger / @ViewBag.BankCount Bank records</p>
+            <p class="text-xs text-gray-400 mt-1 text-right">@ViewBag.MatchPercent% reconciled · @ViewBag.LedgerCount Ledger / @ViewBag.BankCount Bank records</p>
         </div>
     }
 </div>

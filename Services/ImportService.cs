@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Security.Cryptography;
-using AFTRS.Models;
 using AFTRS.Data;
+using AFTRS.Models;
 using CsvHelper;
-using MiniExcelLibs;
 using Microsoft.EntityFrameworkCore;
+using MiniExcelLibs;
 
 namespace AFTRS.Services;
 
@@ -25,40 +25,34 @@ public class ImportService
     }
 
     /// <summary>
-    /// Checks whether this file (by name + SHA-256 hash) has already been uploaded (FR-09a).
+    /// SRS Validation 1 (Duplicate File): checks SHA-256 hash exists in DB.
     /// </summary>
-    public async Task<string?> CheckFileHashAsync(string fileName, string fileHash, string source, int batchId)
+    public async Task<string?> CheckFileHashAsync(string fileName, string fileHash)
     {
-        var exists = await _context.FileUploadRecords
-            .AnyAsync(r => r.FileHash == fileHash || r.FileName == fileName);
+        var exists = await _context.FileUploadRecords.AnyAsync(r => r.FileHash == fileHash);
         if (exists)
             return $"Duplicate file detected: '{fileName}' (or a file with identical content) has already been uploaded. Upload aborted to prevent data duplication.";
         return null;
     }
 
-    /// <summary>Records a file upload entry after successful import (FR-09a).</summary>
-    public void RecordFileUpload(string fileName, string fileHash, string source, string? uploadedBy, int batchId)
+    /// <summary>Records a file upload entry after successful import.</summary>
+    public void RecordFileUpload(string fileName, string fileHash, string source)
     {
         _context.FileUploadRecords.Add(new FileUploadRecord
         {
             FileName = fileName,
             FileHash = fileHash,
             Source = source,
-            UploadedBy = uploadedBy,
-            BatchId = batchId,
             UploadedAt = DateTime.Now
         });
     }
 
     /// <summary>
-    /// FR-09b: Checks individual transaction rows against existing records
-    /// using (ReferenceNumber + Date + Amount) to skip duplicates.
+    /// SRS Validation 2 (Duplicate Row): skip any row where Date + Ref + Amount matches an existing record.
     /// </summary>
-    private async Task<List<Transaction>> FilterDuplicateRowsAsync(List<Transaction> newTransactions, string source)
+    private async Task<List<Transaction>> FilterDuplicateRowsAsync(List<Transaction> newTransactions)
     {
-        // Pull existing (Ref, Date, Amount) combos for this source
         var existing = await _context.Transactions
-            .Where(t => t.Source == source && t.ReferenceNumber != null)
             .Select(t => new { t.ReferenceNumber, t.TransactionDate, t.Amount })
             .ToListAsync();
 
@@ -67,9 +61,64 @@ public class ImportService
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         return newTransactions
-            .Where(t => string.IsNullOrEmpty(t.ReferenceNumber) ||
-                        !existingSet.Contains($"{t.ReferenceNumber}|{t.TransactionDate:yyyy-MM-dd}|{t.Amount}"))
+            .Where(t =>
+            {
+                var key = $"{t.ReferenceNumber}|{t.TransactionDate:yyyy-MM-dd}|{t.Amount}";
+                return !existingSet.Contains(key);
+            })
             .ToList();
+    }
+
+    private static bool TryParseDateDmy(string? value, out DateTime date)
+    {
+        return DateTime.TryParseExact(
+            value?.Trim(),
+            "dd/MM/yyyy",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out date);
+    }
+
+    private static string? GetString(IDictionary<string, object> dict, string key)
+    {
+        if (!dict.TryGetValue(key, out var v) || v == null) return null;
+        return Convert.ToString(v);
+    }
+
+    private static decimal? GetDecimal(IDictionary<string, object> dict, string key)
+    {
+        var s = GetString(dict, key);
+        if (s == null) return null;
+        if (decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out var d)) return d;
+        // Also try current culture as a fallback for Excel exports.
+        if (decimal.TryParse(s, NumberStyles.Number, CultureInfo.CurrentCulture, out d)) return d;
+        return null;
+    }
+
+    /// <summary>
+    /// SRS Validation 3 (Double-Entry Balance): if ledger totals are unbalanced, warn.
+    /// Assumes an optional "Type" column: Credit/Debit.
+    /// </summary>
+    private static string? ValidateLedgerBalance(IEnumerable<(decimal Amount, string? Type)> ledgerRows)
+    {
+        decimal sum = 0m;
+
+        foreach (var r in ledgerRows)
+        {
+            if (string.IsNullOrWhiteSpace(r.Type))
+                continue; // can't validate without debit/credit
+
+            var type = r.Type.Trim();
+            if (type.Equals("Debit", StringComparison.OrdinalIgnoreCase))
+                sum -= r.Amount;
+            else if (type.Equals("Credit", StringComparison.OrdinalIgnoreCase))
+                sum += r.Amount;
+        }
+
+        if (sum != 0m)
+            return $"Ledger file appears UNBALANCED (debits/credits total is {sum:N2} LYD, expected 0.00). Upload accepted but flagged for review.";
+
+        return null;
     }
 
     public async Task<(List<Transaction> Data, string? Error)> ParseCsvWithValidation(Stream fileStream, string source)
@@ -79,30 +128,45 @@ public class ImportService
 
         try
         {
-            var records = csv.GetRecords<dynamic>().Select(row =>
+            var rows = csv.GetRecords<dynamic>().ToList();
+            var records = new List<Transaction>();
+            var ledgerForBalance = new List<(decimal Amount, string? Type)>();
+
+            foreach (var row in rows)
             {
+                var dict = (IDictionary<string, object>)row;
+                var dateRaw = GetString(dict, "Date");
+                var desc = GetString(dict, "Description");
+                var refNum = GetString(dict, "Reference Number") ?? GetString(dict, "ReferenceNumber") ?? GetString(dict, "Reference") ?? GetString(dict, "Ref");
+                var amount = GetDecimal(dict, "Amount");
+
+                if (!TryParseDateDmy(dateRaw, out var date) || string.IsNullOrWhiteSpace(desc) || amount == null || string.IsNullOrWhiteSpace(refNum))
+                    return (new List<Transaction>(), "Invalid file format. Required columns: Date (DD/MM/YYYY), Description, Reference Number, Amount.");
+
                 var t = new Transaction
                 {
-                    TransactionDate = DateTime.Parse(row.Date),
-                    Description = row.Description,
-                    ReferenceNumber = row.Reference,
-                    Amount = decimal.Parse(row.Amount),
+                    TransactionDate = date,
+                    Description = desc!,
+                    ReferenceNumber = refNum,
+                    Amount = decimal.Round(amount.Value, 2, MidpointRounding.AwayFromZero),
                     Source = source,
                     Status = "Unmatched"
                 };
-                // Optional Type column (Credit/Debit) — SRS 3.2.2
-                var dict = (IDictionary<string, object>)row;
-                if (dict.TryGetValue("Type", out var typeVal) && typeVal != null)
-                    t.TransactionType = typeVal.ToString();
-                return t;
-            }).ToList();
 
-            var filtered = await FilterDuplicateRowsAsync(records, source);
-            return (filtered, null);
+                records.Add(t);
+
+                var type = GetString(dict, "Type");
+                if (source == "Ledger")
+                    ledgerForBalance.Add((t.Amount, type));
+            }
+
+            var filtered = await FilterDuplicateRowsAsync(records);
+            var warning = source == "Ledger" ? ValidateLedgerBalance(ledgerForBalance) : null;
+            return (filtered, warning);
         }
         catch (Exception)
         {
-            return (new List<Transaction>(), "Error parsing CSV. Please ensure columns are: Date, Description, Reference, Amount. Type is optional.");
+            return (new List<Transaction>(), "Error parsing CSV. Please ensure headers include: Date (DD/MM/YYYY), Description, Reference Number, Amount.");
         }
     }
 
@@ -111,31 +175,44 @@ public class ImportService
         try
         {
             var rows = fileStream.Query(useHeaderRow: true).ToList();
-            var records = rows.Select(row =>
+            var records = new List<Transaction>();
+            var ledgerForBalance = new List<(decimal Amount, string? Type)>();
+
+            foreach (var row in rows)
             {
                 var dict = (IDictionary<string, object>)row;
-                string? typeVal = null;
-                if (dict.TryGetValue("Type", out var tv) && tv != null)
-                    typeVal = tv.ToString();
+                var dateRaw = GetString(dict, "Date");
+                var desc = GetString(dict, "Description");
+                var refNum = GetString(dict, "Reference Number") ?? GetString(dict, "ReferenceNumber") ?? GetString(dict, "Reference") ?? GetString(dict, "Ref");
+                var amount = GetDecimal(dict, "Amount");
 
-                return new Transaction
+                if (!TryParseDateDmy(dateRaw, out var date) || string.IsNullOrWhiteSpace(desc) || amount == null || string.IsNullOrWhiteSpace(refNum))
+                    return (new List<Transaction>(), "Invalid file format. Required columns: Date (DD/MM/YYYY), Description, Reference Number, Amount.");
+
+                var t = new Transaction
                 {
-                    TransactionDate = Convert.ToDateTime(row.Date),
-                    Description = Convert.ToString(row.Description) ?? string.Empty,
-                    ReferenceNumber = Convert.ToString(row.Reference),
-                    Amount = Convert.ToDecimal(row.Amount),
+                    TransactionDate = date,
+                    Description = desc!,
+                    ReferenceNumber = refNum,
+                    Amount = decimal.Round(amount.Value, 2, MidpointRounding.AwayFromZero),
                     Source = source,
-                    Status = "Unmatched",
-                    TransactionType = typeVal
+                    Status = "Unmatched"
                 };
-            }).ToList();
 
-            var filtered = await FilterDuplicateRowsAsync(records, source);
-            return (filtered, null);
+                records.Add(t);
+
+                var type = GetString(dict, "Type");
+                if (source == "Ledger")
+                    ledgerForBalance.Add((t.Amount, type));
+            }
+
+            var filtered = await FilterDuplicateRowsAsync(records);
+            var warning = source == "Ledger" ? ValidateLedgerBalance(ledgerForBalance) : null;
+            return (filtered, warning);
         }
         catch (Exception)
         {
-            return (new List<Transaction>(), "Error parsing Excel. Please ensure headers are: Date, Description, Reference, Amount. Type is optional.");
+            return (new List<Transaction>(), "Error parsing Excel. Please ensure headers include: Date (DD/MM/YYYY), Description, Reference Number, Amount.");
         }
     }
 }

@@ -9,9 +9,22 @@
                 <p class="text-5xl font-black">@ViewBag.TotalUsers</p>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow border-2 border-gray-100">
+                <p class="text-gray-400 uppercase text-xs font-bold">Recent Security Events</p>
+                <div class="mt-3 space-y-2">
+                    @foreach (var l in (IEnumerable<AFTRS.Models.SecurityLog>)(ViewBag.RecentSecurityLogs ?? new List<AFTRS.Models.SecurityLog>()))
+                    {
+                        <div class="flex justify-between text-xs">
+                            <span class="font-mono text-gray-600">@l.Timestamp.ToString("g")</span>
+                            <span class="text-gray-700">@l.Action</span>
+                            <span class="@(l.IsSuccess ? "text-green-600" : "text-red-600")">@(l.IsSuccess ? "Success" : "Failed")</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow border-2 border-gray-100">
                 <p class="text-gray-400 uppercase text-xs font-bold">Total Sessions Processed</p>
-                <p class="text-4xl font-bold text-blue-600">@ViewBag.TotalBatches</p>
-                <a asp-controller="Strategic" asp-action="Archive" class="text-blue-600 text-sm font-bold hover:underline mt-2 inline-block">Open Archives →</a>
+                <p class="text-4xl font-bold text-blue-600">N/A</p>
+                <p class="text-xs text-gray-500 mt-2">Standalone file processor (no batch archive in this build)</p>
             </div>
         </div>
 

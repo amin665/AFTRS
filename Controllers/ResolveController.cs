@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
 using AFTRS.Data;
+using AFTRS.Infrastructure;
 using AFTRS.Models;
 using AFTRS.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
 
 namespace AFTRS.Controllers;
 
-[Authorize(Roles = "FinancialManager,Admin")]
+[RoleAuthorize("Manager", "Admin")]
 public class ResolveController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -17,58 +17,70 @@ public class ResolveController : Controller
         _context = context;
     }
 
-    // FR-14: Discrepancy Dashboard (Split-Screen)
+    [HttpGet]
     public async Task<IActionResult> Index()
-{
-    // Find the active batch
-    var activeBatch = await _context.ReconciliationBatches.FirstOrDefaultAsync(b => !b.IsFinalized);
-    
-    if (activeBatch == null) return View(new ResolutionViewModel());
-
-    var model = new ResolutionViewModel
     {
-        UnmatchedLedger = await _context.Transactions
-            .Where(t => t.BatchId == activeBatch.Id && t.Source == "Ledger" && t.Status == "Unmatched").ToListAsync(),
-        UnmatchedBank = await _context.Transactions
-            .Where(t => t.BatchId == activeBatch.Id && t.Source == "Bank" && t.Status == "Unmatched").ToListAsync()
-    };
-    return View(model);
-}
-
-    [HttpPost]
-public async Task<IActionResult> ForceMatch(int ledgerId, int bankId, string comment)
-{
-    if (string.IsNullOrEmpty(comment)) return BadRequest("Justification is mandatory.");
-
-    // 1. Find the active batch to get its name
-    var activeBatch = await _context.ReconciliationBatches.FirstOrDefaultAsync(b => !b.IsFinalized);
-    if (activeBatch == null) return BadRequest("No active session found.");
-
-    var ledgerItem = await _context.Transactions.FindAsync(ledgerId);
-    var bankItem = await _context.Transactions.FindAsync(bankId);
-
-    if (ledgerItem != null && bankItem != null)
-    {
-        ledgerItem.Status = "Resolved";
-        bankItem.Status = "Resolved";
-        ledgerItem.MatchedTransactionId = bankItem.Id;
-        bankItem.MatchedTransactionId = ledgerItem.Id;
-
-        // 2. Log it with the Batch Name
-        var audit = new FinancialAuditLog
+        var model = new ResolutionViewModel
         {
-            LedgerTransactionId = ledgerId,
-            BankTransactionId = bankId,
-            UserEmail = User.Identity?.Name ?? "Unknown",
-            Justification = comment,
-            BatchName = activeBatch.Name, // <--- RECORD THE NAME HERE
-            Timestamp = DateTime.Now
+            UnmatchedLedger = await _context.Transactions
+                .Where(t => t.Source == "Ledger" && t.Status == "Unmatched")
+                .OrderByDescending(t => t.TransactionDate)
+                .ToListAsync(),
+            UnmatchedBank = await _context.Transactions
+                .Where(t => t.Source == "Bank" && t.Status == "Unmatched")
+                .OrderByDescending(t => t.TransactionDate)
+                .ToListAsync()
         };
 
-        _context.FinancialAuditLogs.Add(audit);
-        await _context.SaveChangesAsync();
+        return View(model);
     }
 
-    return RedirectToAction("Index");
-}
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForceMatch(int ledgerId, int bankId, string comment)
+    {
+        if (string.IsNullOrWhiteSpace(comment))
+            return BadRequest("Justification is mandatory.");
+
+        var ledger = await _context.Transactions.FirstOrDefaultAsync(t => t.TransactionID == ledgerId && t.Source == "Ledger");
+        var bank = await _context.Transactions.FirstOrDefaultAsync(t => t.TransactionID == bankId && t.Source == "Bank");
+
+        if (ledger == null || bank == null) return NotFound();
+        if (ledger.Status != "Unmatched" || bank.Status != "Unmatched") return BadRequest("Both transactions must be Unmatched.");
+
+        var oldLedgerStatus = ledger.Status;
+        var oldBankStatus = bank.Status;
+
+        ledger.Status = "Reconciled";
+        bank.Status = "Reconciled";
+        ledger.MatchedTransactionID = bank.TransactionID;
+        bank.MatchedTransactionID = ledger.TransactionID;
+
+        var uid = User.FindFirst(AuthConstants.UserIdClaimType)?.Value;
+        if (uid == null) return Forbid();
+        var userId = int.Parse(uid);
+
+        // Append-only audit: log for both transactions so trail is complete.
+        _context.FinancialAuditLogs.Add(new FinancialAuditLog
+        {
+            UserID = userId,
+            TransactionID = ledger.TransactionID,
+            OldStatus = oldLedgerStatus,
+            NewStatus = ledger.Status,
+            Justification = comment,
+            Timestamp = DateTime.Now
+        });
+        _context.FinancialAuditLogs.Add(new FinancialAuditLog
+        {
+            UserID = userId,
+            TransactionID = bank.TransactionID,
+            OldStatus = oldBankStatus,
+            NewStatus = bank.Status,
+            Justification = comment,
+            Timestamp = DateTime.Now
+        });
+
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
+    }
 }

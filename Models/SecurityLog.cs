@@ -1,23 +1,28 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AFTRS.Models;
 
 public class SecurityLog
 {
     [Key]
-    public int Id { get; set; }
-    
-    public string? UserId { get; set; } // Tracks who tried to login
-    
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int LogID { get; set; }
+
+    public int? UserID { get; set; }
+    public User? User { get; set; }
+
+    [Required]
+    [MaxLength(45)]
+    public string IPAddress { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(50)]
+    public string Action { get; set; } = string.Empty; // Login / Upload
+
+    [Required]
+    public bool IsSuccess { get; set; }
+
     [Required]
     public DateTime Timestamp { get; set; } = DateTime.Now;
-    
-    [Required]
-    public string IPAddress { get; set; } = string.Empty;
-    
-    [Required]
-    public string Event { get; set; } = string.Empty; // e.g., "Login Attempt"
-    
-    [Required]
-    public string Status { get; set; } = string.Empty; // Success or Failure (FR-04)
 }

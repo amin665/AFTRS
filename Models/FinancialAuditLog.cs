@@ -1,27 +1,35 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AFTRS.Models;
 
 public class FinancialAuditLog
 {
     [Key]
-    public int Id { get; set; }
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int AuditID { get; set; }
 
     [Required]
-    public string Action { get; set; } = "Manual Match";
-    [Required]
-    public string BatchName { get; set; } = string.Empty;
-    [Required]
-    public int LedgerTransactionId { get; set; }
+    public int TransactionID { get; set; }
+
+    public Transaction? Transaction { get; set; }
 
     [Required]
-    public int BankTransactionId { get; set; }
+    public int UserID { get; set; }
+
+    public User? User { get; set; }
 
     [Required]
-    public string UserEmail { get; set; } // Who did it?
+    [MaxLength(20)]
+    public string OldStatus { get; set; } = string.Empty;
 
     [Required]
-    public string Justification { get; set; } // Why? (Requirement FR-16)
+    [MaxLength(20)]
+    public string NewStatus { get; set; } = string.Empty;
 
+    [Required]
+    public string Justification { get; set; } = string.Empty;
+
+    [Required]
     public DateTime Timestamp { get; set; } = DateTime.Now;
 }
