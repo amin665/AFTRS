@@ -44,8 +44,8 @@ public class StrategicController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SetBudget(int categoryId, int targetMonth, int targetYear, decimal targetAmount)
     {
-        if (targetMonth < 1 || targetMonth > 12) return BadRequest("Invalid month.");
-        if (targetYear < 2000 || targetYear > 2100) return BadRequest("Invalid year.");
+        if (targetMonth < 1 || targetMonth > 12) return BadRequest(UiText.T(Request, "InvalidMonth"));
+        if (targetYear < 2000 || targetYear > 2100) return BadRequest(UiText.T(Request, "InvalidYear"));
 
         var existing = await _context.BudgetTargets
             .FirstOrDefaultAsync(b => b.CategoryID == categoryId && b.TargetMonth == targetMonth && b.TargetYear == targetYear);
@@ -67,7 +67,7 @@ public class StrategicController : Controller
         }
 
         await _context.SaveChangesAsync();
-        TempData["Msg"] = "Budget target saved.";
+        TempData["Msg"] = UiText.T(Request, "BudgetSaved");
         return RedirectToAction(nameof(Index));
     }
 
@@ -77,7 +77,7 @@ public class StrategicController : Controller
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            TempData["Error"] = "Category name is required.";
+            TempData["Error"] = UiText.T(Request, "CategoryNameRequired");
             return RedirectToAction(nameof(Index));
         }
 
@@ -85,7 +85,7 @@ public class StrategicController : Controller
         var exists = await _context.Categories.AnyAsync(c => c.Name == trimmedName);
         if (exists)
         {
-            TempData["Error"] = "Category already exists.";
+            TempData["Error"] = UiText.T(Request, "CategoryExists");
             return RedirectToAction(nameof(Index));
         }
 
@@ -96,7 +96,7 @@ public class StrategicController : Controller
         });
 
         await _context.SaveChangesAsync();
-        TempData["Msg"] = "Category keyword rule saved.";
+        TempData["Msg"] = UiText.T(Request, "CategoryRuleSaved");
         return RedirectToAction(nameof(Index));
     }
 

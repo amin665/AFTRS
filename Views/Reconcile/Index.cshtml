@@ -1,21 +1,25 @@
 @model IEnumerable<AFTRS.Models.Transaction>
+@{
+    var language = UiText.Language(Context.Request);
+    ViewData["Title"] = UiText.T(language, "ReconciliationDashboard");
+}
 
 <div class="p-6">
     <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">Reconciliation Dashboard</h1>
+    <h1 class="text-2xl font-bold">@UiText.T(language, "ReconciliationDashboard")</h1>
     
     <div class="flex gap-2">
-        <a asp-controller="Reports" asp-action="ReconciliationPdf" class="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-black shadow transition">Export PDF</a>
-        <a asp-controller="Reports" asp-action="ReconciliationExcel" class="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 shadow transition">Export Excel</a>
+        <a asp-controller="Reports" asp-action="ReconciliationPdf" class="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-black shadow transition">@UiText.T(language, "ExportPdf")</a>
+        <a asp-controller="Reports" asp-action="ReconciliationExcel" class="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 shadow transition">@UiText.T(language, "ExportExcel")</a>
         <form asp-action="CategorizeOnly" method="post">
             @Html.AntiForgeryToken()
-            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 shadow transition">Categorize</button>
+            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 shadow transition">@UiText.T(language, "Categorize")</button>
         </form>
         <!-- The Run Engine Button -->
         <form asp-action="RunEngine" method="post" id="engineForm">
             @Html.AntiForgeryToken()
             <button type="submit" id="runBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-lg transition flex items-center">
-                <span id="btnText">Run Reconciliation Engine</span>
+                <span id="btnText">@UiText.T(language, "RunReconciliationEngine")</span>
                 <span id="spinner" class="hidden ml-2 animate-spin">
                     <i class="fa-solid fa-circle-notch"></i>
                 </span>
@@ -32,21 +36,21 @@
     }
 
     <div class="flex gap-4 mb-4 text-xs font-medium">
-        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-400 inline-block"></span> Auto Reconciled</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> Manual Reconciled</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-400 inline-block"></span> Discrepancy</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-400 inline-block"></span> @UiText.T(language, "AutoReconciled")</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> @UiText.T(language, "ManualReconciled")</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-400 inline-block"></span> @UiText.T(language, "Discrepancy")</span>
     </div>
 
     <div class="bg-white rounded-xl shadow overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Date")</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Description")</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Amount")</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Source")</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Category")</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Status")</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -81,7 +85,7 @@
     document.getElementById('engineForm').onsubmit = function() {
         document.getElementById('runBtn').disabled = true;
         document.getElementById('runBtn').classList.add('opacity-50', 'cursor-not-allowed');
-        document.getElementById('btnText').innerText = "Processing Transactions...";
+        document.getElementById('btnText').innerText = "@UiText.T(language, "ProcessingTransactions")";
         document.getElementById('spinner').classList.remove('hidden');
     };
 </script>

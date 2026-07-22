@@ -1,43 +1,47 @@
+@{
+    var language = UiText.Language(Context.Request);
+    ViewData["Title"] = UiText.T(language, "ManagerDashboard");
+}
 <div class="p-6">
     <div class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">Financial Manager Dashboard</h1>
-            <p class="text-gray-500">Operational Overview & Session Management</p>
+            <h1 class="text-3xl font-bold text-gray-800">@UiText.T(language, "ManagerDashboard")</h1>
+            <p class="text-gray-500">@UiText.T(language, "OperationalOverview")</p>
         </div>
         <div class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-bold">
-            Role: Financial Manager
+            @UiText.T(language, "RoleLabel"): @UiText.T(language, "FinancialManager")
         </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white p-6 rounded-xl shadow border-l-4 border-blue-500 hover:shadow-md transition">
-            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Data Import</h3>
-            <p class="text-sm text-gray-500 mt-2">Upload Ledger and Bank files (CSV/XLSX). Duplicate files are blocked by SHA-256 hash.</p>
+            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">@UiText.T(language, "DataImport")</h3>
+            <p class="text-sm text-gray-500 mt-2">@UiText.T(language, "UploadLedger") / @UiText.T(language, "UploadBankStatement") (CSV/XLSX). SHA-256.</p>
             <div class="mt-4">
-                <a asp-controller="Import" asp-action="Index" class="text-blue-600 text-sm font-bold hover:underline">Open Import</a>
+                <a asp-controller="Import" asp-action="Index" class="text-blue-600 text-sm font-bold hover:underline">@UiText.T(language, "OpenImport")</a>
             </div>
         </div>
 
         <!-- Card 2: Discrepancies -->
         <div class="bg-white p-6 rounded-xl shadow border-l-4 border-red-500 hover:shadow-md transition">
-            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Pending Discrepancies</h3>
+            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">@UiText.T(language, "PendingDiscrepancies")</h3>
             <p class="text-4xl font-black text-red-600">@(ViewBag.DiscrepancyCount ?? 0)</p>
-            <p class="text-xs text-gray-400 mb-4">Requires manual resolution</p>
-            <a asp-controller="Resolve" asp-action="Index" class="text-red-600 text-sm font-bold hover:underline">Open Workbench</a>
+            <p class="text-xs text-gray-400 mb-4">@UiText.T(language, "RequiresManualResolution")</p>
+            <a asp-controller="Resolve" asp-action="Index" class="text-red-600 text-sm font-bold hover:underline">@UiText.T(language, "OpenWorkbench")</a>
         </div>
 
         <!-- Card 3: System Actions -->
         <div class="bg-white p-6 rounded-xl shadow border-l-4 border-green-500 hover:shadow-md transition">
-            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Quick Actions</h3>
+            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">@UiText.T(language, "QuickActions")</h3>
             <ul class="mt-4 space-y-3">
                 <li>
                     <a asp-controller="Reconcile" asp-action="Index" class="flex items-center text-gray-700 hover:text-green-600">
-                        <span class="mr-2"><i class="fa-solid fa-microchip"></i></span> Run Reconciliation
+                        <span class="mr-2"><i class="fa-solid fa-microchip"></i></span> @UiText.T(language, "RunReconciliation")
                     </a>
                 </li>
                 <li>
                     <a asp-controller="Strategic" asp-action="Index" class="flex items-center text-gray-700 hover:text-green-600">
-                        <span class="mr-2"><i class="fa-solid fa-chart-line"></i></span> View Intelligence
+                        <span class="mr-2"><i class="fa-solid fa-chart-line"></i></span> @UiText.T(language, "ViewIntelligence")
                     </a>
                 </li>
             </ul>
@@ -47,29 +51,29 @@
     @if ((ViewBag.TotalCount ?? 0) > 0)
     {
         <div class="mt-8 bg-white p-6 rounded-xl shadow">
-            <h2 class="text-lg font-bold text-gray-700 mb-4">System Progress</h2>
+            <h2 class="text-lg font-bold text-gray-700 mb-4">@UiText.T(language, "SystemProgress")</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div class="bg-gray-50 rounded-lg p-4 text-center">
                     <p class="text-3xl font-black text-gray-800">@ViewBag.TotalCount</p>
-                    <p class="text-xs text-gray-500 uppercase mt-1">Total Transactions</p>
+                    <p class="text-xs text-gray-500 uppercase mt-1">@UiText.T(language, "TotalTransactions")</p>
                 </div>
                 <div class="bg-green-50 rounded-lg p-4 text-center">
                     <p class="text-3xl font-black text-green-600">@ViewBag.ReconciledCount</p>
-                    <p class="text-xs text-gray-500 uppercase mt-1">Reconciled</p>
+                    <p class="text-xs text-gray-500 uppercase mt-1">@UiText.T(language, "Reconciled")</p>
                 </div>
                 <div class="bg-red-50 rounded-lg p-4 text-center">
                     <p class="text-3xl font-black text-red-600">@ViewBag.DiscrepancyCount</p>
-                    <p class="text-xs text-gray-500 uppercase mt-1">Discrepancies</p>
+                    <p class="text-xs text-gray-500 uppercase mt-1">@UiText.T(language, "Discrepancies")</p>
                 </div>
                 <div class="bg-blue-50 rounded-lg p-4 text-center">
                     <p class="text-3xl font-black text-blue-600">@ViewBag.MatchPercent%</p>
-                    <p class="text-xs text-gray-500 uppercase mt-1">Match Rate</p>
+                    <p class="text-xs text-gray-500 uppercase mt-1">@UiText.T(language, "MatchRate")</p>
                 </div>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-3">
                 <div class="bg-green-500 h-3 rounded-full transition-all duration-1000" style="width: @ViewBag.MatchPercent%"></div>
             </div>
-            <p class="text-xs text-gray-400 mt-1 text-right">@ViewBag.MatchPercent% reconciled | @ViewBag.LedgerCount Ledger / @ViewBag.BankCount Bank records</p>
+            <p class="text-xs text-gray-400 mt-1 text-right">@ViewBag.MatchPercent% @UiText.T(language, "Reconciled") | @ViewBag.LedgerCount @UiText.T(language, "Ledger") / @ViewBag.BankCount @UiText.T(language, "Bank") @UiText.T(language, "Records")</p>
         </div>
     }
 </div>

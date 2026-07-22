@@ -40,13 +40,13 @@ public class ResolveController : Controller
     public async Task<IActionResult> ForceMatch(int ledgerId, int bankId, string comment)
     {
         if (string.IsNullOrWhiteSpace(comment))
-            return BadRequest("Justification is mandatory.");
+            return BadRequest(UiText.T(Request, "JustificationMandatory"));
 
         var ledger = await _context.Transactions.FirstOrDefaultAsync(t => t.TransactionID == ledgerId && t.Source == "Ledger");
         var bank = await _context.Transactions.FirstOrDefaultAsync(t => t.TransactionID == bankId && t.Source == "Bank");
 
         if (ledger == null || bank == null) return NotFound();
-        if (ledger.Status != "Discrepancy" || bank.Status != "Discrepancy") return BadRequest("Both transactions must be discrepancies.");
+        if (ledger.Status != "Discrepancy" || bank.Status != "Discrepancy") return BadRequest(UiText.T(Request, "BothDiscrepancies"));
 
         var oldLedgerStatus = ledger.Status;
         var oldBankStatus = bank.Status;

@@ -39,7 +39,7 @@ public class ReconcileController : Controller
         var matched = await _matching.RunReconciliationAsync();
         var categorized = await _heuristics.ApplyKeywordCategoriesAsync();
 
-        TempData["Msg"] = $"Engine complete: {matched} transaction pairs reconciled, {categorized} categorized.";
+        TempData["Msg"] = string.Format(UiText.T(Request, "EngineComplete"), matched, categorized);
         return RedirectToAction(nameof(Index));
     }
 
@@ -48,7 +48,7 @@ public class ReconcileController : Controller
     public async Task<IActionResult> CategorizeOnly()
     {
         var categorized = await _heuristics.ApplyKeywordCategoriesAsync();
-        TempData["Msg"] = $"Categorization complete: {categorized} transactions updated.";
+        TempData["Msg"] = string.Format(UiText.T(Request, "CategorizationComplete"), categorized);
         return RedirectToAction(nameof(Index));
     }
 }

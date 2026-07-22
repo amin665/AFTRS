@@ -1,11 +1,12 @@
 @{
-    ViewData["Title"] = "Access Denied";
+    var language = UiText.Language(Context.Request);
+    ViewData["Title"] = UiText.T(language, "AccessDenied");
 }
 
 <div class="max-w-xl mx-auto mt-16 bg-white p-8 rounded-xl shadow border">
-    <h1 class="text-2xl font-bold text-red-700">Access Denied</h1>
-    <p class="text-gray-600 mt-2">You do not have permission to access this resource.</p>
+    <h1 class="text-2xl font-bold text-red-700">@UiText.T(language, "AccessDenied")</h1>
+    <p class="text-gray-600 mt-2">@UiText.T(language, "NoPermission")</p>
     <div class="mt-6">
-        <a asp-controller="Home" asp-action="Index" class="text-blue-600 font-bold hover:underline">Return to dashboard</a>
+        <a asp-controller="Home" asp-action="Index" class="text-blue-600 font-bold hover:underline">@UiText.T(language, "ReturnDashboard")</a>
     </div>
 </div>

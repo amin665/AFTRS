@@ -1,45 +1,49 @@
+@{
+    var language = UiText.Language(Context.Request);
+    ViewData["Title"] = UiText.T(language, "AdminDashboard");
+}
 <div class="p-6">
-    <h1 class="text-3xl font-bold mb-2 text-gray-800">System Admin Dashboard</h1>
-    <p class="text-gray-500 mb-8">Security Monitoring & Audit Compliance</p>
+    <h1 class="text-3xl font-bold mb-2 text-gray-800">@UiText.T(language, "AdminDashboard")</h1>
+    <p class="text-gray-500 mb-8">@UiText.T(language, "SecurityMonitoring")</p>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="space-y-6">
             <div class="bg-gray-800 text-white p-8 rounded-2xl shadow-xl">
-                <p class="text-gray-400 uppercase text-xs font-bold">Total Registered Users</p>
+                <p class="text-gray-400 uppercase text-xs font-bold">@UiText.T(language, "TotalRegisteredUsers")</p>
                 <p class="text-5xl font-black">@ViewBag.TotalUsers</p>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow border-2 border-gray-100">
-                <p class="text-gray-400 uppercase text-xs font-bold">Recent Security Events</p>
+                <p class="text-gray-400 uppercase text-xs font-bold">@UiText.T(language, "RecentSecurityEvents")</p>
                 <div class="mt-3 space-y-2">
                     @foreach (var l in (IEnumerable<AFTRS.Models.SecurityLog>)(ViewBag.RecentSecurityLogs ?? new List<AFTRS.Models.SecurityLog>()))
                     {
                         <div class="flex justify-between text-xs">
                             <span class="font-mono text-gray-600">@l.Timestamp.ToString("g")</span>
                             <span class="text-gray-700">@l.Action</span>
-                            <span class="@(l.IsSuccess ? "text-green-600" : "text-red-600")">@(l.IsSuccess ? "Success" : "Failed")</span>
+                            <span class="@(l.IsSuccess ? "text-green-600" : "text-red-600")">@(l.IsSuccess ? UiText.T(language, "Success") : UiText.T(language, "Failed"))</span>
                         </div>
                     }
                 </div>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow border-2 border-gray-100">
-                <p class="text-gray-400 uppercase text-xs font-bold">Total Sessions Processed</p>
+                <p class="text-gray-400 uppercase text-xs font-bold">@UiText.T(language, "TotalSessionsProcessed")</p>
                 <p class="text-4xl font-bold text-blue-600">N/A</p>
-                <p class="text-xs text-gray-500 mt-2">Standalone file processor (no batch archive in this build)</p>
+                <p class="text-xs text-gray-500 mt-2">@UiText.T(language, "StandaloneNote")</p>
             </div>
         </div>
 
         <div class="bg-white p-8 rounded-2xl shadow border-2 border-blue-50">
             <h2 class="text-xl font-bold mb-6 flex items-center">
-                <span class="mr-2 text-blue-600"><i class="fa-solid fa-shield-halved"></i></span> Compliance Controls
+                <span class="mr-2 text-blue-600"><i class="fa-solid fa-shield-halved"></i></span> @UiText.T(language, "ComplianceControls")
             </h2>
             <div class="space-y-4">
                 <a asp-controller="Admin" asp-action="SecurityLogs" class="block p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-blue-500 transition group">
-                    <p class="font-bold group-hover:text-blue-600">Security Logs</p>
-                    <p class="text-xs text-gray-500">Track all login attempts and IP addresses</p>
+                    <p class="font-bold group-hover:text-blue-600">@UiText.T(language, "SecurityLogs")</p>
+                    <p class="text-xs text-gray-500">@UiText.T(language, "TrackAccess")</p>
                 </a>
                 <a asp-controller="Admin" asp-action="AuditTrail" class="block p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-blue-500 transition group">
-                    <p class="font-bold group-hover:text-blue-600">Financial Audit Trail</p>
-                    <p class="text-xs text-gray-500">View immutable record of manual matches</p>
+                    <p class="font-bold group-hover:text-blue-600">@UiText.T(language, "FinancialAuditTrail")</p>
+                    <p class="text-xs text-gray-500">@UiText.T(language, "ViewImmutable")</p>
                 </a>
             </div>
         </div>

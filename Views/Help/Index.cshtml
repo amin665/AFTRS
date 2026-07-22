@@ -1,147 +1,105 @@
 @{
-    ViewData["Title"] = "CSV Upload Guide";
+    var language = UiText.Language(Context.Request);
+    var isArabic = language == "ar";
+    ViewData["Title"] = UiText.T(language, "ViewCsvGuide");
 }
 
 <div class="max-w-4xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-2 text-gray-800">CSV / Excel Upload Guide</h1>
-    <p class="text-gray-500 mb-8">This page explains the correct file format for importing financial data into AFTRS.</p>
+    <h1 class="text-3xl font-bold mb-2 text-gray-800">@(isArabic ? "دليل رفع ملفات CSV / Excel" : "CSV / Excel Upload Guide")</h1>
+    <p class="text-gray-500 mb-8">@(isArabic ? "تشرح هذه الصفحة التنسيق الصحيح لاستيراد البيانات المالية إلى AFTRS." : "This page explains the correct file format for importing financial data into AFTRS.")</p>
 
-    <!-- General Rules -->
     <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 rounded-r-xl">
-        <h2 class="font-bold text-blue-800 mb-2">General Rules</h2>
+        <h2 class="font-bold text-blue-800 mb-2">@(isArabic ? "القواعد العامة" : "General Rules")</h2>
         <ul class="list-disc pl-5 text-sm text-blue-900 space-y-1">
-            <li>Accepted formats: <strong>.csv</strong> (Comma-Separated Values) and <strong>.xlsx</strong> (Excel).</li>
-            <li>Maximum file size: <strong>25 MB</strong> per upload (FR-08).</li>
-            <li>The first row must be a <strong>header row</strong> with the exact column names shown below.</li>
-            <li>Duplicate files (same content) will be automatically rejected (SRS Validation 1).</li>
-            <li>Duplicate transaction rows (same Date + Reference Number + Amount) will be skipped (FR-09b).</li>
+            <li>@(isArabic ? "الصيغ المقبولة:" : "Accepted formats:") <strong>.csv</strong> @(isArabic ? "و" : "and") <strong>.xlsx</strong>.</li>
+            <li>@(isArabic ? "الحد الأقصى لحجم الملف:" : "Maximum file size:") <strong>25 MB</strong> @(isArabic ? "لكل عملية رفع" : "per upload") (FR-08).</li>
+            <li>@(isArabic ? "يجب أن يحتوي الصف الأول على أسماء الأعمدة المطلوبة كما هي موضحة أدناه." : "The first row must be a header row with the exact column names shown below.")</li>
+            <li>@(isArabic ? "يتم رفض الملفات المكررة تلقائياً باستخدام SHA-256." : "Duplicate files are automatically rejected using SHA-256.")</li>
+            <li>@(isArabic ? "يتم تخطي صفوف المعاملات المكررة حسب التاريخ والمرجع والمبلغ." : "Duplicate transaction rows are skipped by date, reference number, and amount.")</li>
         </ul>
     </div>
 
-    <!-- Required Columns -->
     <div class="bg-white rounded-xl shadow p-6 mb-8">
-        <h2 class="text-xl font-bold mb-4 text-gray-800">Required Columns</h2>
+        <h2 class="text-xl font-bold mb-4 text-gray-800">@(isArabic ? "الأعمدة المطلوبة" : "Required Columns")</h2>
         <table class="min-w-full text-sm">
             <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
                 <tr>
-                    <th class="px-4 py-3 text-left">Column Header</th>
-                    <th class="px-4 py-3 text-left">Type</th>
-                    <th class="px-4 py-3 text-left">Format / Notes</th>
-                    <th class="px-4 py-3 text-left">Required?</th>
+                    <th class="px-4 py-3 text-left">@(isArabic ? "اسم العمود" : "Column Header")</th>
+                    <th class="px-4 py-3 text-left">@UiText.T(language, "Type")</th>
+                    <th class="px-4 py-3 text-left">@(isArabic ? "التنسيق / ملاحظات" : "Format / Notes")</th>
+                    <th class="px-4 py-3 text-left">@(isArabic ? "مطلوب؟" : "Required?")</th>
                 </tr>
             </thead>
             <tbody class="divide-y">
                 <tr>
                     <td class="px-4 py-3 font-mono font-bold text-blue-700">Transaction Date</td>
-                    <td class="px-4 py-3">Date</td>
+                    <td class="px-4 py-3">@UiText.T(language, "Date")</td>
                     <td class="px-4 py-3">DD/MM/YYYY</td>
-                    <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">Required</span></td>
+                    <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">@(isArabic ? "مطلوب" : "Required")</span></td>
                 </tr>
                 <tr>
                     <td class="px-4 py-3 font-mono font-bold text-blue-700">Description</td>
-                    <td class="px-4 py-3">Text</td>
-                    <td class="px-4 py-3">Max 200 characters. Used by the Fuzzy Matching engine (FR-11).</td>
-                    <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">Required</span></td>
+                    <td class="px-4 py-3">@(isArabic ? "نص" : "Text")</td>
+                    <td class="px-4 py-3">@(isArabic ? "حد أقصى 200 حرف. يستخدمه محرك المطابقة التقريبية." : "Max 200 characters. Used by the fuzzy matching engine.")</td>
+                    <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">@(isArabic ? "مطلوب" : "Required")</span></td>
                 </tr>
                 <tr>
                     <td class="px-4 py-3 font-mono font-bold text-blue-700">Reference Number</td>
-                    <td class="px-4 py-3">Text</td>
-                    <td class="px-4 py-3">Transaction reference / cheque number. Used for Exact Match.</td>
-                    <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">Required</span></td>
+                    <td class="px-4 py-3">@(isArabic ? "نص" : "Text")</td>
+                    <td class="px-4 py-3">@(isArabic ? "رقم مرجع المعاملة أو الشيك. يستخدم في المطابقة الدقيقة." : "Transaction reference or cheque number. Used for exact matching.")</td>
+                    <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">@(isArabic ? "مطلوب" : "Required")</span></td>
                 </tr>
                 <tr>
                     <td class="px-4 py-3 font-mono font-bold text-blue-700">Amount</td>
-                    <td class="px-4 py-3">Decimal</td>
-                    <td class="px-4 py-3">Positive number with up to 2 decimal places (e.g. <code>1500.00</code>). Use LYD.</td>
-                    <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">Required</span></td>
+                    <td class="px-4 py-3">@(isArabic ? "رقم عشري" : "Decimal")</td>
+                    <td class="px-4 py-3">@(isArabic ? "رقم موجب بدقتين عشريتين مثل" : "Positive number with up to 2 decimal places, e.g.") <code>1500.00</code>. LYD.</td>
+                    <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">@(isArabic ? "مطلوب" : "Required")</span></td>
                 </tr>
                 <tr>
                     <td class="px-4 py-3 font-mono text-gray-500">Type</td>
-                    <td class="px-4 py-3">Text</td>
-                    <td class="px-4 py-3">Either <code>Credit</code> or <code>Debit</code>. If omitted, the field is left blank.</td>
-                    <td class="px-4 py-3"><span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-bold">Optional</span></td>
+                    <td class="px-4 py-3">@(isArabic ? "نص" : "Text")</td>
+                    <td class="px-4 py-3">Credit / Debit. @(isArabic ? "اختياري." : "Optional.")</td>
+                    <td class="px-4 py-3"><span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-bold">@(isArabic ? "اختياري" : "Optional")</span></td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <!-- Example CSV -->
     <div class="bg-white rounded-xl shadow p-6 mb-8">
-        <h2 class="text-xl font-bold mb-4 text-gray-800">Example CSV (Internal Ledger)</h2>
+        <h2 class="text-xl font-bold mb-4 text-gray-800">@(isArabic ? "مثال CSV للسجل الداخلي" : "Example CSV (Internal Ledger)")</h2>
         <pre class="bg-gray-900 text-green-400 rounded-lg p-4 text-sm overflow-x-auto">Transaction Date,Description,Reference Number,Amount,Type
 05/01/2026,Monthly Rent Payment,CHQ-001,3500.00,Debit
 10/01/2026,LTT Utilities Bill,UTIL-JAN,450.00,Debit
 15/01/2026,Salary Transfer - Ahmed,PAY-001,5200.00,Debit
 20/01/2026,Client Payment Received,INV-2026-01,12000.00,Credit</pre>
-        <p class="text-xs text-gray-400 mt-2">Save the file as UTF-8 encoding for best compatibility.</p>
+        <p class="text-xs text-gray-400 mt-2">@(isArabic ? "احفظ الملف بترميز UTF-8 للحصول على أفضل توافق." : "Save the file as UTF-8 encoding for best compatibility.")</p>
     </div>
 
-    <!-- Example Excel -->
-    <div class="bg-white rounded-xl shadow p-6 mb-8">
-        <h2 class="text-xl font-bold mb-4 text-gray-800">Example Excel (Bank Statement)</h2>
-        <p class="text-sm text-gray-600 mb-3">For <strong>.xlsx</strong> files, ensure the first row contains the exact column headers. Dates must be stored as real date values (not plain text) in Excel for correct parsing.</p>
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-sm border border-gray-200 rounded">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="border px-4 py-2">Transaction Date</th>
-                        <th class="border px-4 py-2">Description</th>
-                        <th class="border px-4 py-2">Reference</th>
-                        <th class="border px-4 py-2">Amount</th>
-                        <th class="border px-4 py-2">Type</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <tr>
-                        <td class="border px-4 py-2">05/01/2026</td>
-                        <td class="border px-4 py-2">Cheque Withdrawal - Rent</td>
-                        <td class="border px-4 py-2">CHQ-001</td>
-                        <td class="border px-4 py-2">3500.00</td>
-                        <td class="border px-4 py-2">Debit</td>
-                    </tr>
-                    <tr>
-                        <td class="border px-4 py-2">10/01/2026</td>
-                        <td class="border px-4 py-2">Online Bill - Utilities LTT</td>
-                        <td class="border px-4 py-2">UTIL-JAN</td>
-                        <td class="border px-4 py-2">450.00</td>
-                        <td class="border px-4 py-2">Debit</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Common Errors -->
     <div class="bg-white rounded-xl shadow p-6">
-        <h2 class="text-xl font-bold mb-4 text-gray-800">Common Errors &amp; Solutions</h2>
+        <h2 class="text-xl font-bold mb-4 text-gray-800">@(isArabic ? "الأخطاء الشائعة والحلول" : "Common Errors & Solutions")</h2>
         <table class="min-w-full text-sm">
             <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
                 <tr>
-                    <th class="px-4 py-3 text-left">Error</th>
-                    <th class="px-4 py-3 text-left">Cause</th>
-                    <th class="px-4 py-3 text-left">Solution</th>
+                    <th class="px-4 py-3 text-left">@(isArabic ? "الخطأ" : "Error")</th>
+                    <th class="px-4 py-3 text-left">@(isArabic ? "السبب" : "Cause")</th>
+                    <th class="px-4 py-3 text-left">@(isArabic ? "الحل" : "Solution")</th>
                 </tr>
             </thead>
             <tbody class="divide-y">
                 <tr>
-                    <td class="px-4 py-3 text-red-600 font-medium">Error parsing CSV</td>
-                    <td class="px-4 py-3">Missing or misspelled column header</td>
-                        <td class="px-4 py-3">Ensure columns are named exactly: <code>Transaction Date, Description, Reference Number, Amount</code></td>
+                    <td class="px-4 py-3 text-red-600 font-medium">@(isArabic ? "خطأ في قراءة الملف" : "File parsing error")</td>
+                    <td class="px-4 py-3">@(isArabic ? "اسم عمود ناقص أو مكتوب بشكل غير صحيح" : "Missing or misspelled column header")</td>
+                    <td class="px-4 py-3">Transaction Date, Description, Reference Number, Amount</td>
                 </tr>
                 <tr>
-                    <td class="px-4 py-3 text-red-600 font-medium">File exceeds 25 MB</td>
-                    <td class="px-4 py-3">File is too large</td>
-                    <td class="px-4 py-3">Split the file into smaller batches and upload separately.</td>
+                    <td class="px-4 py-3 text-red-600 font-medium">@(isArabic ? "الملف أكبر من 25 MB" : "File exceeds 25 MB")</td>
+                    <td class="px-4 py-3">@(isArabic ? "حجم الملف كبير جداً" : "File is too large")</td>
+                    <td class="px-4 py-3">@(isArabic ? "قسّم الملف إلى دفعات أصغر." : "Split the file into smaller batches.")</td>
                 </tr>
                 <tr>
-                    <td class="px-4 py-3 text-red-600 font-medium">Duplicate file detected</td>
-                    <td class="px-4 py-3">Same file content already uploaded</td>
-                    <td class="px-4 py-3">Check the Upload History table. If re-uploading intentionally, cancel the current session and start a new one.</td>
-                </tr>
-                <tr>
-                    <td class="px-4 py-3 text-red-600 font-medium">Amount format error</td>
-                    <td class="px-4 py-3">Amount contains currency symbols (e.g. <code>LYD 450</code>)</td>
-                    <td class="px-4 py-3">Remove all currency symbols. Use plain numbers only (e.g. <code>450.00</code>).</td>
+                    <td class="px-4 py-3 text-red-600 font-medium">@(isArabic ? "ملف مكرر" : "Duplicate file detected")</td>
+                    <td class="px-4 py-3">@(isArabic ? "تم رفع نفس محتوى الملف سابقاً" : "Same file content was uploaded before")</td>
+                    <td class="px-4 py-3">@(isArabic ? "راجع سجل الملفات المرفوعة." : "Check the upload history table.")</td>
                 </tr>
             </tbody>
         </table>

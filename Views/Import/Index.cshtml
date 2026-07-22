@@ -1,10 +1,11 @@
 @{
-    ViewData["Title"] = "Data Import";
+    var language = UiText.Language(Context.Request);
+    ViewData["Title"] = UiText.T(language, "DataImport");
     var uploadHistory = ViewBag.UploadHistory as IEnumerable<AFTRS.Models.FileUploadRecord> ?? new List<AFTRS.Models.FileUploadRecord>();
 }
 
 <div class="max-w-4xl mx-auto mt-10">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Data Import</h1>
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">@UiText.T(language, "DataImport")</h1>
 
     @if (TempData["Success"] != null)
     {
@@ -30,48 +31,48 @@
     <!-- FR-08 notice -->
     <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-6 text-sm text-yellow-800 flex items-center gap-2">
         <i class="fa-solid fa-circle-info"></i>
-        <span>Maximum file size: <strong>25 MB</strong> per upload. Accepted formats: <strong>.csv</strong> and <strong>.xlsx</strong>.
-        <a asp-controller="Help" asp-action="Index" class="underline ml-1">View CSV format guide</a></span>
+        <span>@UiText.T(language, "MaxUploadNotice") <strong>25 MB</strong> @UiText.T(language, "PerUploadFormats") <strong>.csv</strong> / <strong>.xlsx</strong>.
+        <a asp-controller="Help" asp-action="Index" class="underline ml-1">@UiText.T(language, "ViewCsvGuide")</a></span>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Internal Ledger -->
         <div class="bg-white p-8 rounded-xl shadow-md border-2 border-dashed border-blue-200 text-center">
-            <h3 class="text-lg font-semibold mb-4 text-blue-800">Internal Ledger (CSV/XLSX)</h3>
+            <h3 class="text-lg font-semibold mb-4 text-blue-800">@UiText.T(language, "InternalLedger") (CSV/XLSX)</h3>
             <form asp-action="Upload" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="sourceType" value="Ledger" />
                 <input type="file" name="file" accept=".csv,.xlsx" class="mb-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">Upload Ledger</button>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">@UiText.T(language, "UploadLedger")</button>
             </form>
         </div>
 
         <!-- Bank Statement -->
         <div class="bg-white p-8 rounded-xl shadow-md border-2 border-dashed border-green-200 text-center">
-            <h3 class="text-lg font-semibold mb-4 text-green-800">Bank Statement (CSV/XLSX)</h3>
+            <h3 class="text-lg font-semibold mb-4 text-green-800">@UiText.T(language, "BankStatement") (CSV/XLSX)</h3>
             <form asp-action="Upload" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="sourceType" value="Bank" />
                 <input type="file" name="file" accept=".csv,.xlsx" class="mb-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" />
-                <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold">Upload Bank Statement</button>
+                <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold">@UiText.T(language, "UploadBankStatement")</button>
             </form>
         </div>
     </div>
 
     <div class="mt-10">
-        <h2 class="text-lg font-bold text-gray-700 mb-4">Recent Uploads</h2>
+        <h2 class="text-lg font-bold text-gray-700 mb-4">@UiText.T(language, "RecentUploads")</h2>
         @if (!uploadHistory.Any())
         {
-            <p class="text-gray-400 italic text-sm">No files uploaded yet.</p>
+            <p class="text-gray-400 italic text-sm">@UiText.T(language, "NoFilesUploaded")</p>
         }
         else
         {
             <table class="min-w-full bg-white rounded-xl shadow text-sm">
                 <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
                     <tr>
-                        <th class="px-4 py-3 text-left">File Name</th>
-                        <th class="px-4 py-3 text-left">Type</th>
-                        <th class="px-4 py-3 text-left">Uploaded At</th>
+                        <th class="px-4 py-3 text-left">@UiText.T(language, "FileName")</th>
+                        <th class="px-4 py-3 text-left">@UiText.T(language, "Type")</th>
+                        <th class="px-4 py-3 text-left">@UiText.T(language, "UploadedAt")</th>
                         <th class="px-4 py-3 text-left">SHA-256</th>
                     </tr>
                 </thead>

@@ -57,7 +57,7 @@ public class AccountController : Controller
         {
             await _context.SecurityLogs.AddAsync(new SecurityLog { UserID = user.UserID, IPAddress = ip, Action = "Login", IsSuccess = false });
             await _context.SaveChangesAsync();
-            ModelState.AddModelError("", "Account locked. Contact the System Administrator.");
+            ModelState.AddModelError("", UiText.T(Request, "AccountLockedAdmin"));
             return View(model);
         }
 
@@ -82,7 +82,7 @@ public class AccountController : Controller
             user.IsLocked = true;
             await _context.SecurityLogs.AddAsync(new SecurityLog { UserID = user.UserID, IPAddress = ip, Action = "Login", IsSuccess = false });
             await _context.SaveChangesAsync();
-            ModelState.AddModelError("", "Account locked. Too many failed attempts.");
+            ModelState.AddModelError("", UiText.T(Request, "AccountLockedAttempts"));
             return View(model);
         }
 
@@ -90,7 +90,7 @@ public class AccountController : Controller
 
         if (isLocked)
         {
-            ModelState.AddModelError("", "Account locked. Contact the System Administrator.");
+            ModelState.AddModelError("", UiText.T(Request, "AccountLockedAdmin"));
             return View(model);
         }
 
@@ -106,7 +106,7 @@ public class AccountController : Controller
             }
 
             await _context.SaveChangesAsync();
-            ModelState.AddModelError("", "Invalid login attempt.");
+            ModelState.AddModelError("", UiText.T(Request, "InvalidLogin"));
             return View(model);
         }
 
@@ -133,14 +133,14 @@ public class AccountController : Controller
 
         if (!IsPasswordComplexEnough(model.Password))
         {
-            ModelState.AddModelError("", "Password must be at least 8 characters and include uppercase, lowercase, a digit, and a symbol.");
+            ModelState.AddModelError("", UiText.T(Request, "PasswordComplexity"));
             return View(model);
         }
 
         var exists = await _context.Users.AnyAsync(u => u.Username == model.Email);
         if (exists)
         {
-            ModelState.AddModelError("", "Username already exists.");
+            ModelState.AddModelError("", UiText.T(Request, "UsernameExists"));
             return View(model);
         }
 

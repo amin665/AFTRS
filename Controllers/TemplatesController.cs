@@ -56,13 +56,13 @@ public class TemplatesController : Controller
     public async Task<IActionResult> Create(Template model)
     {
         if (model.CategoryID <= 0)
-            ModelState.AddModelError("CategoryID", "Category is required.");
+            ModelState.AddModelError("CategoryID", UiText.T(Request, "CategoryRequired"));
 
         if (string.IsNullOrWhiteSpace(model.DescriptionName))
-            ModelState.AddModelError("DescriptionName", "DescriptionName is required.");
+            ModelState.AddModelError("DescriptionName", UiText.T(Request, "DescriptionNameRequired"));
 
         if (model.Amount <= 0)
-            ModelState.AddModelError("Amount", "Amount must be greater than zero.");
+            ModelState.AddModelError("Amount", UiText.T(Request, "AmountGreaterThanZero"));
 
         if (!ModelState.IsValid)
         {
@@ -74,7 +74,7 @@ public class TemplatesController : Controller
         _context.Templates.Add(model);
         await _context.SaveChangesAsync();
 
-        TempData["Msg"] = "Template created.";
+        TempData["Msg"] = UiText.T(Request, "TemplateCreated");
         return RedirectToAction(nameof(Index));
     }
 }

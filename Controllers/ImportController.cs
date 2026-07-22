@@ -56,14 +56,14 @@ public class ImportController : Controller
         {
             LogUploadAttempt(false, sourceType);
             await _context.SaveChangesAsync();
-            return BadRequest("No file uploaded.");
+            return BadRequest(UiText.T(Request, "NoFileUploaded"));
         }
 
         if (file.Length > MaxFileSizeBytes)
         {
             LogUploadAttempt(false, sourceType);
             await _context.SaveChangesAsync();
-            TempData["Error"] = $"File '{file.FileName}' exceeds the 25 MB size limit.";
+            TempData["Error"] = string.Format(UiText.T(Request, "FileTooLarge"), file.FileName);
             return RedirectToAction(nameof(Index));
         }
 
@@ -71,7 +71,7 @@ public class ImportController : Controller
         {
             LogUploadAttempt(false, sourceType);
             await _context.SaveChangesAsync();
-            TempData["Error"] = "Invalid source type.";
+            TempData["Error"] = UiText.T(Request, "InvalidSourceType");
             return RedirectToAction(nameof(Index));
         }
 
@@ -104,7 +104,7 @@ public class ImportController : Controller
         {
             LogUploadAttempt(false, sourceType);
             await _context.SaveChangesAsync();
-            TempData["Error"] = "Invalid file type. Only .csv and .xlsx are supported.";
+            TempData["Error"] = UiText.T(Request, "InvalidFileType");
             return RedirectToAction(nameof(Index));
         }
 
@@ -128,7 +128,7 @@ public class ImportController : Controller
         {
             LogUploadAttempt(false, sourceType);
             await _context.SaveChangesAsync();
-            TempData["Error"] = "No new rows imported (all rows may be duplicates).";
+            TempData["Error"] = UiText.T(Request, "NoNewRows");
             return RedirectToAction(nameof(Index));
         }
 
@@ -140,7 +140,7 @@ public class ImportController : Controller
 
         await _context.SaveChangesAsync();
 
-        TempData["Success"] = $"Imported {result.Data.Count} records from '{file.FileName}' ({sourceType}).";
+        TempData["Success"] = string.Format(UiText.T(Request, "ImportedRecords"), result.Data.Count, file.FileName, sourceType);
         return RedirectToAction(nameof(Index));
     }
 }

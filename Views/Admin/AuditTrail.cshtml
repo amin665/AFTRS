@@ -1,19 +1,23 @@
 @model IEnumerable<AFTRS.Models.FinancialAuditLog>
+@{
+    var language = UiText.Language(Context.Request);
+    ViewData["Title"] = UiText.T(language, "FinancialAuditTrail");
+}
 
 <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6 text-blue-800">Financial Audit Trail</h1>
+    <h1 class="text-2xl font-bold mb-6 text-blue-800">@UiText.T(language, "FinancialAuditTrail")</h1>
     <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 text-sm">
-        <strong>Note:</strong> This record is append-only. Manual matches require a justification comment.
+        <strong>@UiText.T(language, "Note"):</strong> @UiText.T(language, "AuditTrailNote")
     </div>
     <table class="min-w-full bg-white rounded-lg shadow">
         <thead class="bg-blue-900 text-white">
             <tr>
-                <th class="py-3 px-4 text-left">Timestamp</th>
-                <th class="py-3 px-4 text-left">User</th>
-                <th class="py-3 px-4 text-left">Transaction</th>
-                <th class="py-3 px-4 text-left">Old Status</th>
-                <th class="py-3 px-4 text-left">New Status</th>
-                <th class="py-3 px-4 text-left">Justification</th>
+                <th class="py-3 px-4 text-left">@UiText.T(language, "Timestamp")</th>
+                <th class="py-3 px-4 text-left">@UiText.T(language, "User")</th>
+                <th class="py-3 px-4 text-left">@UiText.T(language, "Transaction")</th>
+                <th class="py-3 px-4 text-left">@UiText.T(language, "OldStatus")</th>
+                <th class="py-3 px-4 text-left">@UiText.T(language, "NewStatus")</th>
+                <th class="py-3 px-4 text-left">@UiText.T(language, "Justification")</th>
             </tr>
         </thead>
         <tbody class="divide-y">
@@ -22,7 +26,7 @@
                 <tr>
                     <td class="py-3 px-4 text-sm text-gray-500">@entry.Timestamp.ToString("g")</td>
                     <td class="py-3 px-4 font-medium">@entry.User?.Username</td>
-                    <td class="py-3 px-4 text-xs">ID: @entry.TransactionID</td>
+                    <td class="py-3 px-4 text-xs">@UiText.T(language, "UserId"): @entry.TransactionID</td>
                     <td class="py-3 px-4">@entry.OldStatus</td>
                     <td class="py-3 px-4">@entry.NewStatus</td>
                     <td class="py-3 px-4 italic text-gray-600">"@entry.Justification"</td>
