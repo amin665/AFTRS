@@ -1,6 +1,30 @@
 @model IEnumerable<AFTRS.Models.SecurityLog>
+@{
+    var users = ViewBag.Users as IEnumerable<AFTRS.Models.User> ?? new List<AFTRS.Models.User>();
+    int? selectedUserId = ViewBag.SelectedUserId as int?;
+}
 <div class="p-6">
     <h1 class="text-2xl font-bold mb-6">System Security Logs (UC-15)</h1>
+    <form method="get" class="bg-white rounded-lg shadow p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Filter by Date</label>
+            <input type="date" name="date" value="@ViewBag.SelectedDate" class="w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Filter by User</label>
+            <select name="userId" class="w-full border rounded px-3 py-2">
+                <option value="">All users</option>
+                @foreach (var user in users)
+                {
+                    <option value="@user.UserID" selected="@(selectedUserId == user.UserID)">@user.Username</option>
+                }
+            </select>
+        </div>
+        <div class="flex items-end gap-2">
+            <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded">Apply Filter</button>
+            <a asp-action="SecurityLogs" class="bg-gray-100 text-gray-700 px-4 py-2 rounded">Clear</a>
+        </div>
+    </form>
     <table class="min-w-full bg-white rounded-lg overflow-hidden shadow">
         <thead class="bg-gray-800 text-white">
             <tr>

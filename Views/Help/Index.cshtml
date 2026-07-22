@@ -3,7 +3,7 @@
 }
 
 <div class="max-w-4xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-2 text-gray-800">📄 CSV / Excel Upload Guide</h1>
+    <h1 class="text-3xl font-bold mb-2 text-gray-800">CSV / Excel Upload Guide</h1>
     <p class="text-gray-500 mb-8">This page explains the correct file format for importing financial data into AFTRS.</p>
 
     <!-- General Rules -->
@@ -14,7 +14,7 @@
             <li>Maximum file size: <strong>25 MB</strong> per upload (FR-08).</li>
             <li>The first row must be a <strong>header row</strong> with the exact column names shown below.</li>
             <li>Duplicate files (same content) will be automatically rejected (SRS Validation 1).</li>
-            <li>Duplicate transaction rows (same Date + Reference Number + Amount) will be silently skipped (SRS Validation 2).</li>
+            <li>Duplicate transaction rows (same Date + Reference Number + Amount) will be skipped (FR-09b).</li>
         </ul>
     </div>
 
@@ -32,7 +32,7 @@
             </thead>
             <tbody class="divide-y">
                 <tr>
-                    <td class="px-4 py-3 font-mono font-bold text-blue-700">Date</td>
+                    <td class="px-4 py-3 font-mono font-bold text-blue-700">Transaction Date</td>
                     <td class="px-4 py-3">Date</td>
                     <td class="px-4 py-3">DD/MM/YYYY</td>
                     <td class="px-4 py-3"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">Required</span></td>
@@ -68,7 +68,7 @@
     <!-- Example CSV -->
     <div class="bg-white rounded-xl shadow p-6 mb-8">
         <h2 class="text-xl font-bold mb-4 text-gray-800">Example CSV (Internal Ledger)</h2>
-        <pre class="bg-gray-900 text-green-400 rounded-lg p-4 text-sm overflow-x-auto">Date,Description,Reference Number,Amount,Type
+        <pre class="bg-gray-900 text-green-400 rounded-lg p-4 text-sm overflow-x-auto">Transaction Date,Description,Reference Number,Amount,Type
 05/01/2026,Monthly Rent Payment,CHQ-001,3500.00,Debit
 10/01/2026,LTT Utilities Bill,UTIL-JAN,450.00,Debit
 15/01/2026,Salary Transfer - Ahmed,PAY-001,5200.00,Debit
@@ -84,7 +84,7 @@
             <table class="min-w-full text-sm border border-gray-200 rounded">
                 <thead class="bg-gray-100 text-gray-700">
                     <tr>
-                        <th class="border px-4 py-2">Date</th>
+                        <th class="border px-4 py-2">Transaction Date</th>
                         <th class="border px-4 py-2">Description</th>
                         <th class="border px-4 py-2">Reference</th>
                         <th class="border px-4 py-2">Amount</th>
@@ -94,14 +94,14 @@
                 <tbody class="divide-y">
                     <tr>
                         <td class="border px-4 py-2">05/01/2026</td>
-                        <td class="border px-4 py-2">Cheque Withdrawal – Rent</td>
+                        <td class="border px-4 py-2">Cheque Withdrawal - Rent</td>
                         <td class="border px-4 py-2">CHQ-001</td>
                         <td class="border px-4 py-2">3500.00</td>
                         <td class="border px-4 py-2">Debit</td>
                     </tr>
                     <tr>
                         <td class="border px-4 py-2">10/01/2026</td>
-                        <td class="border px-4 py-2">Online Bill – Utilities LTT</td>
+                        <td class="border px-4 py-2">Online Bill - Utilities LTT</td>
                         <td class="border px-4 py-2">UTIL-JAN</td>
                         <td class="border px-4 py-2">450.00</td>
                         <td class="border px-4 py-2">Debit</td>
@@ -126,7 +126,7 @@
                 <tr>
                     <td class="px-4 py-3 text-red-600 font-medium">Error parsing CSV</td>
                     <td class="px-4 py-3">Missing or misspelled column header</td>
-                    <td class="px-4 py-3">Ensure columns are named exactly: <code>Date, Description, Reference Number, Amount</code></td>
+                        <td class="px-4 py-3">Ensure columns are named exactly: <code>Transaction Date, Description, Reference Number, Amount</code></td>
                 </tr>
                 <tr>
                     <td class="px-4 py-3 text-red-600 font-medium">File exceeds 25 MB</td>

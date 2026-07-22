@@ -42,4 +42,13 @@ public class ReconcileController : Controller
         TempData["Msg"] = $"Engine complete: {matched} transaction pairs reconciled, {categorized} categorized.";
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CategorizeOnly()
+    {
+        var categorized = await _heuristics.ApplyKeywordCategoriesAsync();
+        TempData["Msg"] = $"Categorization complete: {categorized} transactions updated.";
+        return RedirectToAction(nameof(Index));
+    }
 }

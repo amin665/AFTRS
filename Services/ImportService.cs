@@ -79,6 +79,18 @@ public class ImportService
             out date);
     }
 
+    private static bool TryGetDate(IDictionary<string, object> dict, string key, out DateTime date)
+    {
+        date = default;
+        if (!dict.TryGetValue(key, out var value) || value == null) return false;
+        if (value is DateTime dt)
+        {
+            date = dt;
+            return true;
+        }
+        return TryParseDateDmy(Convert.ToString(value), out date);
+    }
+
     private static string? GetString(IDictionary<string, object> dict, string key)
     {
         if (!dict.TryGetValue(key, out var v) || v == null) return null;
@@ -135,13 +147,12 @@ public class ImportService
             foreach (var row in rows)
             {
                 var dict = (IDictionary<string, object>)row;
-                var dateRaw = GetString(dict, "Date");
                 var desc = GetString(dict, "Description");
                 var refNum = GetString(dict, "Reference Number") ?? GetString(dict, "ReferenceNumber") ?? GetString(dict, "Reference") ?? GetString(dict, "Ref");
                 var amount = GetDecimal(dict, "Amount");
 
-                if (!TryParseDateDmy(dateRaw, out var date) || string.IsNullOrWhiteSpace(desc) || amount == null || string.IsNullOrWhiteSpace(refNum))
-                    return (new List<Transaction>(), "Invalid file format. Required columns: Date (DD/MM/YYYY), Description, Reference Number, Amount.");
+                if (!TryGetDate(dict, "Transaction Date", out var date) || string.IsNullOrWhiteSpace(desc) || amount == null || string.IsNullOrWhiteSpace(refNum))
+                    return (new List<Transaction>(), "Invalid file format. Required columns: Transaction Date (DD/MM/YYYY), Description, Reference Number, Amount.");
 
                 var t = new Transaction
                 {
@@ -150,7 +161,7 @@ public class ImportService
                     ReferenceNumber = refNum,
                     Amount = decimal.Round(amount.Value, 2, MidpointRounding.AwayFromZero),
                     Source = source,
-                    Status = "Unmatched"
+                    Status = "Discrepancy"
                 };
 
                 records.Add(t);
@@ -166,7 +177,7 @@ public class ImportService
         }
         catch (Exception)
         {
-            return (new List<Transaction>(), "Error parsing CSV. Please ensure headers include: Date (DD/MM/YYYY), Description, Reference Number, Amount.");
+            return (new List<Transaction>(), "Error parsing CSV. Please ensure headers include: Transaction Date (DD/MM/YYYY), Description, Reference Number, Amount.");
         }
     }
 
@@ -181,13 +192,12 @@ public class ImportService
             foreach (var row in rows)
             {
                 var dict = (IDictionary<string, object>)row;
-                var dateRaw = GetString(dict, "Date");
                 var desc = GetString(dict, "Description");
                 var refNum = GetString(dict, "Reference Number") ?? GetString(dict, "ReferenceNumber") ?? GetString(dict, "Reference") ?? GetString(dict, "Ref");
                 var amount = GetDecimal(dict, "Amount");
 
-                if (!TryParseDateDmy(dateRaw, out var date) || string.IsNullOrWhiteSpace(desc) || amount == null || string.IsNullOrWhiteSpace(refNum))
-                    return (new List<Transaction>(), "Invalid file format. Required columns: Date (DD/MM/YYYY), Description, Reference Number, Amount.");
+                if (!TryGetDate(dict, "Transaction Date", out var date) || string.IsNullOrWhiteSpace(desc) || amount == null || string.IsNullOrWhiteSpace(refNum))
+                    return (new List<Transaction>(), "Invalid file format. Required columns: Transaction Date (DD/MM/YYYY), Description, Reference Number, Amount.");
 
                 var t = new Transaction
                 {
@@ -196,7 +206,7 @@ public class ImportService
                     ReferenceNumber = refNum,
                     Amount = decimal.Round(amount.Value, 2, MidpointRounding.AwayFromZero),
                     Source = source,
-                    Status = "Unmatched"
+                    Status = "Discrepancy"
                 };
 
                 records.Add(t);
@@ -212,7 +222,7 @@ public class ImportService
         }
         catch (Exception)
         {
-            return (new List<Transaction>(), "Error parsing Excel. Please ensure headers include: Date (DD/MM/YYYY), Description, Reference Number, Amount.");
+            return (new List<Transaction>(), "Error parsing Excel. Please ensure headers include: Transaction Date (DD/MM/YYYY), Description, Reference Number, Amount.");
         }
     }
 }

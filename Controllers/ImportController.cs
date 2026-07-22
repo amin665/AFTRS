@@ -15,6 +15,23 @@ public class ImportController : Controller
 
     private const long MaxFileSizeBytes = 25L * 1024L * 1024L;
 
+    private void LogUploadAttempt(bool isSuccess, string sourceType)
+    {
+        int? userId = null;
+        var uid = User.FindFirst(AuthConstants.UserIdClaimType)?.Value;
+        if (uid != null) userId = int.Parse(uid);
+
+        var action = sourceType == "Ledger" || sourceType == "Bank" ? $"Upload-{sourceType}" : "Upload";
+        _context.SecurityLogs.Add(new SecurityLog
+        {
+            UserID = userId,
+            IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
+            Action = action,
+            IsSuccess = isSuccess,
+            Timestamp = DateTime.Now
+        });
+    }
+
     public ImportController(ApplicationDbContext context, ImportService import)
     {
         _context = context;
@@ -36,16 +53,24 @@ public class ImportController : Controller
     public async Task<IActionResult> Upload(IFormFile file, string sourceType)
     {
         if (file == null || file.Length == 0)
+        {
+            LogUploadAttempt(false, sourceType);
+            await _context.SaveChangesAsync();
             return BadRequest("No file uploaded.");
+        }
 
         if (file.Length > MaxFileSizeBytes)
         {
+            LogUploadAttempt(false, sourceType);
+            await _context.SaveChangesAsync();
             TempData["Error"] = $"File '{file.FileName}' exceeds the 25 MB size limit.";
             return RedirectToAction(nameof(Index));
         }
 
         if (sourceType != "Ledger" && sourceType != "Bank")
         {
+            LogUploadAttempt(false, sourceType);
+            await _context.SaveChangesAsync();
             TempData["Error"] = "Invalid source type.";
             return RedirectToAction(nameof(Index));
         }
@@ -61,6 +86,8 @@ public class ImportController : Controller
         var hashError = await _import.CheckFileHashAsync(file.FileName, hash);
         if (hashError != null)
         {
+            LogUploadAttempt(false, sourceType);
+            await _context.SaveChangesAsync();
             TempData["Error"] = hashError;
             return RedirectToAction(nameof(Index));
         }
@@ -75,6 +102,8 @@ public class ImportController : Controller
             result = await _import.ParseExcelWithValidation(stream, sourceType);
         else
         {
+            LogUploadAttempt(false, sourceType);
+            await _context.SaveChangesAsync();
             TempData["Error"] = "Invalid file type. Only .csv and .xlsx are supported.";
             return RedirectToAction(nameof(Index));
         }
@@ -88,6 +117,8 @@ public class ImportController : Controller
             }
             else
             {
+                LogUploadAttempt(false, sourceType);
+                await _context.SaveChangesAsync();
                 TempData["Error"] = result.Error;
                 return RedirectToAction(nameof(Index));
             }
@@ -95,6 +126,8 @@ public class ImportController : Controller
 
         if (result.Data.Count == 0)
         {
+            LogUploadAttempt(false, sourceType);
+            await _context.SaveChangesAsync();
             TempData["Error"] = "No new rows imported (all rows may be duplicates).";
             return RedirectToAction(nameof(Index));
         }
@@ -102,18 +135,8 @@ public class ImportController : Controller
         _context.Transactions.AddRange(result.Data);
         _import.RecordFileUpload(file.FileName, hash, sourceType);
 
-        // Security log for upload.
-        int? userId = null;
-        var uid = User.FindFirst(AuthConstants.UserIdClaimType)?.Value;
-        if (uid != null) userId = int.Parse(uid);
-        _context.SecurityLogs.Add(new SecurityLog
-        {
-            UserID = userId,
-            IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
-            Action = "Upload",
-            IsSuccess = true,
-            Timestamp = DateTime.Now
-        });
+        // Security log for upload attempt (FR-04 style outcome logging extended to uploads).
+        LogUploadAttempt(true, sourceType);
 
         await _context.SaveChangesAsync();
 

@@ -1,5 +1,6 @@
 using AFTRS.Data;
 using AFTRS.Infrastructure;
+using AFTRS.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -66,21 +67,53 @@ public class StrategicController : Controller
         }
 
         await _context.SaveChangesAsync();
+        TempData["Msg"] = "Budget target saved.";
         return RedirectToAction(nameof(Index));
     }
 
-    // FR: Cash Flow projection based on average spending over past 3 months, project next 3.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddCategory(string name, string keywordRule)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            TempData["Error"] = "Category name is required.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var trimmedName = name.Trim();
+        var exists = await _context.Categories.AnyAsync(c => c.Name == trimmedName);
+        if (exists)
+        {
+            TempData["Error"] = "Category already exists.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        _context.Categories.Add(new Category
+        {
+            Name = trimmedName,
+            KeywordRule = string.IsNullOrWhiteSpace(keywordRule) ? null : keywordRule.Trim()
+        });
+
+        await _context.SaveChangesAsync();
+        TempData["Msg"] = "Category keyword rule saved.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    // FR-20: Cash Flow projection based on average spending over previous 6 months, project next N months (default 3).
     [HttpGet]
-    public async Task<IActionResult> GetCashFlowData()
+    public async Task<IActionResult> GetCashFlowData(int projectionMonths = 3)
     {
         var today = DateTime.Today;
-        var start = today.AddMonths(-3);
+        if (projectionMonths < 1 || projectionMonths > 12) projectionMonths = 3;
+
+        var start = today.AddMonths(-6);
         var tx = await _context.Transactions
             .Where(t => t.Source == "Ledger" && t.TransactionDate >= start)
             .OrderBy(t => t.TransactionDate)
             .ToListAsync();
 
-        // Monthly totals for past 3 months (including current partial).
+        // Monthly totals for past 6 months (including current partial).
         var past = tx
             .GroupBy(t => new { t.TransactionDate.Year, t.TransactionDate.Month })
             .Select(g => new { g.Key.Year, g.Key.Month, Total = g.Sum(x => x.Amount) })
@@ -89,7 +122,7 @@ public class StrategicController : Controller
 
         decimal avg = past.Count > 0 ? past.Average(x => x.Total) : 0m;
         var projected = new List<object>();
-        for (int i = 1; i <= 3; i++)
+        for (int i = 1; i <= projectionMonths; i++)
         {
             var d = new DateTime(today.Year, today.Month, 1).AddMonths(i);
             projected.Add(new { Year = d.Year, Month = d.Month, Total = decimal.Round(avg, 2) });

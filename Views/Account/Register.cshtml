@@ -16,11 +16,7 @@
                 <input asp-for="Password" class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Password">
                 
                 <input asp-for="ConfirmPassword" class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Confirm Password">
-                
-                <select asp-for="Role" class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    <option value="Manager">Financial Manager</option>
-                    <option value="Admin">System Administrator</option>
-                </select>
+                <p class="text-xs text-gray-500">New accounts are assigned the Financial Manager role by default.</p>
             </div>
 
             <button type="submit" class="w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">

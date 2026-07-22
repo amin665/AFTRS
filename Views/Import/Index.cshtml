@@ -31,7 +31,7 @@
     <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-6 text-sm text-yellow-800 flex items-center gap-2">
         <i class="fa-solid fa-circle-info"></i>
         <span>Maximum file size: <strong>25 MB</strong> per upload. Accepted formats: <strong>.csv</strong> and <strong>.xlsx</strong>.
-        <a asp-controller="Help" asp-action="Index" class="underline ml-1">View CSV format guide →</a></span>
+        <a asp-controller="Help" asp-action="Index" class="underline ml-1">View CSV format guide</a></span>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -86,7 +86,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-gray-500">@rec.UploadedAt.ToString("g")</td>
-                            <td class="px-4 py-3 font-mono text-xs text-gray-400 truncate max-w-xs" title="@rec.FileHash">@rec.FileHash[..16]…</td>
+                            <td class="px-4 py-3 font-mono text-xs text-gray-400 truncate max-w-xs" title="@rec.FileHash">@rec.FileHash[..16]...</td>
                         </tr>
                     }
                 </tbody>

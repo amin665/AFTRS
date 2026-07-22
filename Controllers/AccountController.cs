@@ -19,6 +19,21 @@ public class AccountController : Controller
 
     private const int MaxFailedAttempts = 5;
 
+    private static bool IsPasswordComplexEnough(string password)
+    {
+        // SRS UC-02: validate password complexity (minimal, deterministic rules).
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 8) return false;
+        bool hasUpper = false, hasLower = false, hasDigit = false, hasSymbol = false;
+        foreach (var ch in password)
+        {
+            if (char.IsUpper(ch)) hasUpper = true;
+            else if (char.IsLower(ch)) hasLower = true;
+            else if (char.IsDigit(ch)) hasDigit = true;
+            else hasSymbol = true;
+        }
+        return hasUpper && hasLower && hasDigit && hasSymbol;
+    }
+
     public AccountController(ApplicationDbContext context, AuthService auth)
     {
         _context = context;
@@ -46,16 +61,24 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // Count recent consecutive failed attempts (in-memory rule; no separate table in schema).
-        var recentFailures = await _context.SecurityLogs
-            .Where(l => l.Action == "Login" && l.IsSuccess == false && l.UserID == (user != null ? user.UserID : null))
-            .OrderByDescending(l => l.Timestamp)
-            .Take(MaxFailedAttempts)
-            .ToListAsync();
+        var lastSuccessAt = user == null
+            ? (DateTime?)null
+            : await _context.SecurityLogs
+                .Where(l => l.Action == "Login" && l.IsSuccess && l.UserID == user.UserID)
+                .OrderByDescending(l => l.Timestamp)
+                .Select(l => (DateTime?)l.Timestamp)
+                .FirstOrDefaultAsync();
 
-        if (user != null && recentFailures.Count == MaxFailedAttempts)
+        var consecutiveFailures = user == null
+            ? 0
+            : await _context.SecurityLogs.CountAsync(l =>
+                l.Action == "Login" &&
+                !l.IsSuccess &&
+                l.UserID == user.UserID &&
+                (lastSuccessAt == null || l.Timestamp > lastSuccessAt));
+
+        if (user != null && consecutiveFailures >= MaxFailedAttempts)
         {
-            // Already failed 5 times.
             user.IsLocked = true;
             await _context.SecurityLogs.AddAsync(new SecurityLog { UserID = user.UserID, IPAddress = ip, Action = "Login", IsSuccess = false });
             await _context.SaveChangesAsync();
@@ -78,9 +101,7 @@ public class AccountController : Controller
 
             if (user != null)
             {
-                // Lock on 5th failure.
-                var failureCount = await _context.SecurityLogs.CountAsync(l => l.Action == "Login" && l.IsSuccess == false && l.UserID == user.UserID);
-                if (failureCount + 1 >= MaxFailedAttempts)
+                if (consecutiveFailures + 1 >= MaxFailedAttempts)
                     user.IsLocked = true;
             }
 
@@ -110,8 +131,11 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
-        // Only allow Manager/Admin as per schema.
-        var role = model.Role == "Admin" ? "Admin" : "Manager";
+        if (!IsPasswordComplexEnough(model.Password))
+        {
+            ModelState.AddModelError("", "Password must be at least 8 characters and include uppercase, lowercase, a digit, and a symbol.");
+            return View(model);
+        }
 
         var exists = await _context.Users.AnyAsync(u => u.Username == model.Email);
         if (exists)
@@ -124,7 +148,7 @@ public class AccountController : Controller
         {
             Username = model.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password),
-            Role = role,
+            Role = "Manager",
             IsLocked = false
         };
 

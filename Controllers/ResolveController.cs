@@ -22,12 +22,12 @@ public class ResolveController : Controller
     {
         var model = new ResolutionViewModel
         {
-            UnmatchedLedger = await _context.Transactions
-                .Where(t => t.Source == "Ledger" && t.Status == "Unmatched")
+            LedgerDiscrepancies = await _context.Transactions
+                .Where(t => t.Source == "Ledger" && t.Status == "Discrepancy")
                 .OrderByDescending(t => t.TransactionDate)
                 .ToListAsync(),
-            UnmatchedBank = await _context.Transactions
-                .Where(t => t.Source == "Bank" && t.Status == "Unmatched")
+            BankDiscrepancies = await _context.Transactions
+                .Where(t => t.Source == "Bank" && t.Status == "Discrepancy")
                 .OrderByDescending(t => t.TransactionDate)
                 .ToListAsync()
         };
@@ -46,13 +46,15 @@ public class ResolveController : Controller
         var bank = await _context.Transactions.FirstOrDefaultAsync(t => t.TransactionID == bankId && t.Source == "Bank");
 
         if (ledger == null || bank == null) return NotFound();
-        if (ledger.Status != "Unmatched" || bank.Status != "Unmatched") return BadRequest("Both transactions must be Unmatched.");
+        if (ledger.Status != "Discrepancy" || bank.Status != "Discrepancy") return BadRequest("Both transactions must be discrepancies.");
 
         var oldLedgerStatus = ledger.Status;
         var oldBankStatus = bank.Status;
 
         ledger.Status = "Reconciled";
         bank.Status = "Reconciled";
+        ledger.MatchMethod = "Manual";
+        bank.MatchMethod = "Manual";
         ledger.MatchedTransactionID = bank.TransactionID;
         bank.MatchedTransactionID = ledger.TransactionID;
 

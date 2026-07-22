@@ -43,12 +43,14 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Transaction>(b =>
         {
-            b.ToTable("Transactions");
+            // SRS FR-09: imported records are stored in Staging_Transactions.
+            b.ToTable("Staging_Transactions");
             b.HasKey(x => x.TransactionID);
             b.Property(x => x.Description).HasMaxLength(200).IsRequired();
             b.Property(x => x.ReferenceNumber).HasMaxLength(50);
             b.Property(x => x.Source).HasMaxLength(20).IsRequired();
             b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            b.Property(x => x.MatchMethod).HasMaxLength(20);
             b.Property(x => x.Amount).HasColumnType("decimal(18,2)");
 
             // Self-referencing match relationship.
@@ -97,11 +99,11 @@ public class ApplicationDbContext : DbContext
             b.HasOne(x => x.Transaction)
                 .WithMany()
                 .HasForeignKey(x => x.TransactionID)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
             b.HasOne(x => x.User)
                 .WithMany()
                 .HasForeignKey(x => x.UserID)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<SecurityLog>(b =>

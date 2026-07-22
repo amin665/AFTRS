@@ -14,16 +14,16 @@
             <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Data Import</h3>
             <p class="text-sm text-gray-500 mt-2">Upload Ledger and Bank files (CSV/XLSX). Duplicate files are blocked by SHA-256 hash.</p>
             <div class="mt-4">
-                <a asp-controller="Import" asp-action="Index" class="text-blue-600 text-sm font-bold hover:underline">Open Import →</a>
+                <a asp-controller="Import" asp-action="Index" class="text-blue-600 text-sm font-bold hover:underline">Open Import</a>
             </div>
         </div>
 
         <!-- Card 2: Discrepancies -->
         <div class="bg-white p-6 rounded-xl shadow border-l-4 border-red-500 hover:shadow-md transition">
             <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Pending Discrepancies</h3>
-            <p class="text-4xl font-black text-red-600">@(ViewBag.UnmatchedCount ?? 0)</p>
+            <p class="text-4xl font-black text-red-600">@(ViewBag.DiscrepancyCount ?? 0)</p>
             <p class="text-xs text-gray-400 mb-4">Requires manual resolution</p>
-            <a asp-controller="Resolve" asp-action="Index" class="text-red-600 text-sm font-bold hover:underline">Open Workbench →</a>
+            <a asp-controller="Resolve" asp-action="Index" class="text-red-600 text-sm font-bold hover:underline">Open Workbench</a>
         </div>
 
         <!-- Card 3: System Actions -->
@@ -32,12 +32,12 @@
             <ul class="mt-4 space-y-3">
                 <li>
                     <a asp-controller="Reconcile" asp-action="Index" class="flex items-center text-gray-700 hover:text-green-600">
-                        <span class="mr-2">🚀</span> Run Reconciliation
+                        <span class="mr-2"><i class="fa-solid fa-microchip"></i></span> Run Reconciliation
                     </a>
                 </li>
                 <li>
                     <a asp-controller="Strategic" asp-action="Index" class="flex items-center text-gray-700 hover:text-green-600">
-                        <span class="mr-2">📊</span> View Intelligence
+                        <span class="mr-2"><i class="fa-solid fa-chart-line"></i></span> View Intelligence
                     </a>
                 </li>
             </ul>
@@ -58,8 +58,8 @@
                     <p class="text-xs text-gray-500 uppercase mt-1">Reconciled</p>
                 </div>
                 <div class="bg-red-50 rounded-lg p-4 text-center">
-                    <p class="text-3xl font-black text-red-600">@ViewBag.UnmatchedCount</p>
-                    <p class="text-xs text-gray-500 uppercase mt-1">Unmatched</p>
+                    <p class="text-3xl font-black text-red-600">@ViewBag.DiscrepancyCount</p>
+                    <p class="text-xs text-gray-500 uppercase mt-1">Discrepancies</p>
                 </div>
                 <div class="bg-blue-50 rounded-lg p-4 text-center">
                     <p class="text-3xl font-black text-blue-600">@ViewBag.MatchPercent%</p>
@@ -69,7 +69,7 @@
             <div class="w-full bg-gray-200 rounded-full h-3">
                 <div class="bg-green-500 h-3 rounded-full transition-all duration-1000" style="width: @ViewBag.MatchPercent%"></div>
             </div>
-            <p class="text-xs text-gray-400 mt-1 text-right">@ViewBag.MatchPercent% reconciled · @ViewBag.LedgerCount Ledger / @ViewBag.BankCount Bank records</p>
+            <p class="text-xs text-gray-400 mt-1 text-right">@ViewBag.MatchPercent% reconciled | @ViewBag.LedgerCount Ledger / @ViewBag.BankCount Bank records</p>
         </div>
     }
 </div>

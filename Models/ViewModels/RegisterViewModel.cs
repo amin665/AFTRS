@@ -12,7 +12,4 @@ public class RegisterViewModel
 
     [Compare("Password", ErrorMessage = "Passwords do not match.")]
     public string ConfirmPassword { get; set; } = string.Empty;
-
-    [Required]
-    public string Role { get; set; } = "Manager"; // Manager / Admin
 }

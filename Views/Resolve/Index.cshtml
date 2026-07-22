@@ -6,9 +6,9 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- LEFT: Ledger Items -->
         <div class="bg-white p-4 rounded-xl shadow border-t-4 border-blue-500">
-            <h3 class="font-bold text-blue-700 mb-4 uppercase text-sm">Unmatched Ledger Items</h3>
+            <h3 class="font-bold text-blue-700 mb-4 uppercase text-sm">Ledger Discrepancies</h3>
             <div class="space-y-2">
-                @foreach (var item in Model.UnmatchedLedger)
+                @foreach (var item in Model.LedgerDiscrepancies)
                 {
                     <div class="flex justify-between items-center p-3 border rounded hover:bg-blue-50 cursor-pointer" onclick="selectItem('ledger', @item.TransactionID, this)">
                         <span>@item.Description</span>
@@ -20,9 +20,9 @@
 
         <!-- RIGHT: Bank Items -->
         <div class="bg-white p-4 rounded-xl shadow border-t-4 border-purple-500">
-            <h3 class="font-bold text-purple-700 mb-4 uppercase text-sm">Unmatched Bank Items</h3>
+            <h3 class="font-bold text-purple-700 mb-4 uppercase text-sm">Bank Discrepancies</h3>
             <div class="space-y-2">
-                @foreach (var item in Model.UnmatchedBank)
+                @foreach (var item in Model.BankDiscrepancies)
                 {
                     <div class="flex justify-between items-center p-3 border rounded hover:bg-purple-50 cursor-pointer" onclick="selectItem('bank', @item.TransactionID, this)">
                         <span>@item.Description</span>
@@ -38,14 +38,25 @@
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
             <p>Selected Ledger ID: <span id="displayLedger" class="font-bold text-blue-400">0</span> + Bank ID: <span id="displayBank" class="font-bold text-purple-400">0</span></p>
             
-            <form asp-action="ForceMatch" method="post" class="flex gap-2 w-full md:w-auto">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="ledgerId" id="inputLedger" />
-                <input type="hidden" name="bankId" id="inputBank" />
-                <input type="text" name="comment" placeholder="Mandatory Justification (e.g. Typo in Ref)" required class="text-black px-4 py-2 rounded-lg flex-grow" />
-                <button type="submit" class="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg font-bold">FORCE MATCH</button>
-            </form>
+            <button type="button" onclick="openAuditModal()" class="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg font-bold">FORCE MATCH</button>
         </div>
+    </div>
+</div>
+
+<div id="auditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white text-gray-900 rounded-xl shadow-xl w-full max-w-md p-6">
+        <h2 class="text-xl font-bold mb-2">Audit Comment Required</h2>
+        <p class="text-sm text-gray-600 mb-4">You are manually linking two discrepancy records. This action will be logged permanently.</p>
+        <form asp-action="ForceMatch" method="post" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ledgerId" id="inputLedger" />
+            <input type="hidden" name="bankId" id="inputBank" />
+            <textarea name="comment" placeholder="Reason for manual match" required class="w-full border rounded-lg px-4 py-2 min-h-28"></textarea>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeAuditModal()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg">Cancel</button>
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">Confirm &amp; Log</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -71,5 +82,15 @@
         if (selectedLedger && selectedBank) {
             document.getElementById('actionArea').classList.remove('hidden');
         }
+    }
+
+    function openAuditModal() {
+        document.getElementById('auditModal').classList.remove('hidden');
+        document.getElementById('auditModal').classList.add('flex');
+    }
+
+    function closeAuditModal() {
+        document.getElementById('auditModal').classList.add('hidden');
+        document.getElementById('auditModal').classList.remove('flex');
     }
 </script>

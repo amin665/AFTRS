@@ -35,5 +35,9 @@ public class Transaction
 
     [Required]
     [MaxLength(20)]
-    public string Status { get; set; } = "Unmatched"; // Unmatched / Reconciled
+    public string Status { get; set; } = "Discrepancy"; // Discrepancy / Reconciled
+
+    // Used for UI color-coding per SRS: Auto (green) vs Manual (yellow) when Reconciled.
+    [MaxLength(20)]
+    public string? MatchMethod { get; set; } // Auto / Manual
 }

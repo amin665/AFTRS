@@ -16,12 +16,23 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> SecurityLogs()
+    public async Task<IActionResult> SecurityLogs(DateTime? date, int? userId)
     {
-        var logs = await _context.SecurityLogs
-            .Include(l => l.User)
-            .OrderByDescending(l => l.Timestamp)
-            .ToListAsync();
+        var query = _context.SecurityLogs.Include(l => l.User).AsQueryable();
+        if (date.HasValue)
+        {
+            var start = date.Value.Date;
+            var end = start.AddDays(1);
+            query = query.Where(l => l.Timestamp >= start && l.Timestamp < end);
+        }
+        if (userId.HasValue)
+            query = query.Where(l => l.UserID == userId.Value);
+
+        ViewBag.Users = await _context.Users.OrderBy(u => u.Username).ToListAsync();
+        ViewBag.SelectedDate = date?.ToString("yyyy-MM-dd");
+        ViewBag.SelectedUserId = userId;
+
+        var logs = await query.OrderByDescending(l => l.Timestamp).ToListAsync();
 
         return View(logs);
     }

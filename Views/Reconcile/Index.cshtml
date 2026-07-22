@@ -5,11 +5,17 @@
     <h1 class="text-2xl font-bold">Reconciliation Dashboard</h1>
     
     <div class="flex gap-2">
+        <a asp-controller="Reports" asp-action="ReconciliationPdf" class="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-black shadow transition">Export PDF</a>
+        <a asp-controller="Reports" asp-action="ReconciliationExcel" class="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 shadow transition">Export Excel</a>
+        <form asp-action="CategorizeOnly" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 shadow transition">Categorize</button>
+        </form>
         <!-- The Run Engine Button -->
         <form asp-action="RunEngine" method="post" id="engineForm">
             @Html.AntiForgeryToken()
             <button type="submit" id="runBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-lg transition flex items-center">
-                <span id="btnText">🚀 Run Reconciliation Engine</span>
+                <span id="btnText">Run Reconciliation Engine</span>
                 <span id="spinner" class="hidden ml-2 animate-spin">
                     <i class="fa-solid fa-circle-notch"></i>
                 </span>
@@ -26,8 +32,9 @@
     }
 
     <div class="flex gap-4 mb-4 text-xs font-medium">
-        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-400 inline-block"></span> Reconciled</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-400 inline-block"></span> Unmatched</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-400 inline-block"></span> Auto Reconciled</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> Manual Reconciled</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-400 inline-block"></span> Discrepancy</span>
     </div>
 
     <div class="bg-white rounded-xl shadow overflow-hidden">
@@ -45,7 +52,9 @@
             <tbody class="divide-y divide-gray-200">
                 @foreach (var item in Model)
                 {
-                    var statusColor = item.Status == "Reconciled" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+                    var statusColor = item.Status == "Reconciled"
+                        ? (item.MatchMethod == "Manual" ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800")
+                        : "bg-red-100 text-red-800";
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap">@item.TransactionDate.ToString("dd/MM/yyyy")</td>
                         <td class="px-6 py-4">@item.Description</td>
@@ -55,7 +64,7 @@
                                 @item.Source
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-xs text-gray-500">@(item.Category?.Name ?? "—")</td>
+                        <td class="px-6 py-4 text-xs text-gray-500">@(item.Category?.Name ?? "-")</td>
                         <td class="px-6 py-4">
                             <span class="px-3 py-1 rounded-full text-xs font-semibold @statusColor">
                                 @item.Status

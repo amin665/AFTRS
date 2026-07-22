@@ -48,7 +48,7 @@ public class HomeController : Controller
 
         ViewBag.TotalCount = all.Count;
         ViewBag.ReconciledCount = all.Count(t => t.Status == "Reconciled");
-        ViewBag.UnmatchedCount = all.Count(t => t.Status == "Unmatched");
+        ViewBag.DiscrepancyCount = all.Count(t => t.Status == "Discrepancy");
         ViewBag.LedgerCount = all.Count(t => t.Source == "Ledger");
         ViewBag.BankCount = all.Count(t => t.Source == "Bank");
 
