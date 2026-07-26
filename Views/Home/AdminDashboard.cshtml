@@ -1,62 +1,59 @@
 @{
     var language = UiText.Language(Context.Request);
     ViewData["Title"] = UiText.T(language, "AdminDashboard");
+    ViewData["HideFooter"] = true;
     var logs = (IEnumerable<AFTRS.Models.SecurityLog>)(ViewBag.RecentSecurityLogs ?? new List<AFTRS.Models.SecurityLog>());
 }
 
-<div class="af-page-header">
-    <div>
-        <p class="af-kicker">@UiText.T(language, "SecurityOperations")</p>
-        <h1 class="af-title">@UiText.T(language, "AdminDashboard")</h1>
-        <p class="af-subtitle">@UiText.T(language, "SecurityMonitoring")</p>
-    </div>
-    <span class="af-badge af-badge-purple"><i class="fa-solid fa-shield-halved"></i> @UiText.T(language, "SystemAdministrator")</span>
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <section class="af-panel af-glow-magenta">
-        <p class="af-kicker">@UiText.T(language, "TotalRegisteredUsers")</p>
-        <p class="af-value">@ViewBag.TotalUsers</p>
-        <p class="af-muted">@UiText.T(language, "StandaloneNote")</p>
-    </section>
-
-    <section class="af-panel lg:col-span-2">
-        <div class="flex items-center justify-between mb-5 gap-4">
-            <div>
-                <p class="af-kicker">@UiText.T(language, "RecentSecurityEvents")</p>
-                <h2 class="text-2xl font-black mt-1">@UiText.T(language, "SecurityLogs")</h2>
-            </div>
-            <a asp-controller="Admin" asp-action="SecurityLogs" class="af-btn-secondary">@UiText.T(language, "ViewImmutable")</a>
-        </div>
-        <div class="space-y-3">
-            @foreach (var l in logs)
-            {
-                <div class="af-stat-mini flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <span class="font-mono text-sm af-muted">@l.Timestamp.ToString("g")</span>
-                    <span class="font-bold">@l.Action</span>
-                    <span class="af-badge @(l.IsSuccess ? "af-badge-green" : "af-badge-red")">@(l.IsSuccess ? UiText.T(language, "Success") : UiText.T(language, "Failed"))</span>
-                </div>
-            }
-        </div>
-    </section>
-</div>
-
-<section class="af-panel mt-6">
-    <div class="flex items-center gap-3 mb-5">
-        <i class="fa-solid fa-fingerprint text-2xl text-cyan-400"></i>
+<div class="af-dashboard-fit">
+    <div class="af-page-header af-dashboard-header">
         <div>
-            <p class="af-kicker">@UiText.T(language, "ComplianceControls")</p>
-            <h2 class="text-2xl font-black">@UiText.T(language, "AdminSecurity")</h2>
+            <p class="af-kicker">@UiText.T(language, "SecurityOperations")</p>
+            <h1 class="af-title">@UiText.T(language, "AdminDashboard")</h1>
+            <p class="af-subtitle">@UiText.T(language, "SecurityMonitoring")</p>
         </div>
+        <span class="af-badge af-badge-purple"><i class="fa-solid fa-shield-halved"></i> @UiText.T(language, "SystemAdministrator")</span>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <a asp-controller="Admin" asp-action="SecurityLogs" class="af-card block">
-            <p class="text-lg font-black">@UiText.T(language, "SecurityLogs")</p>
-            <p class="af-muted mt-2">@UiText.T(language, "TrackAccess")</p>
-        </a>
-        <a asp-controller="Admin" asp-action="AuditTrail" class="af-card block">
-            <p class="text-lg font-black">@UiText.T(language, "FinancialAuditTrail")</p>
-            <p class="af-muted mt-2">@UiText.T(language, "ViewImmutable")</p>
-        </a>
+
+    <div class="af-dashboard-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section class="af-panel af-glow-magenta af-dashboard-side-panel">
+            <div>
+                <p class="af-kicker">@UiText.T(language, "TotalRegisteredUsers")</p>
+                <p class="af-value">@ViewBag.TotalUsers</p>
+                <p class="af-muted">@UiText.T(language, "StandaloneNote")</p>
+            </div>
+
+            <div class="mt-8 space-y-3">
+                <p class="af-kicker">@UiText.T(language, "ComplianceControls")</p>
+                <a asp-controller="Admin" asp-action="SecurityLogs" class="af-stat-mini block">
+                    <span class="font-black">@UiText.T(language, "SecurityLogs")</span>
+                    <span class="block af-muted text-sm mt-1">@UiText.T(language, "TrackAccess")</span>
+                </a>
+                <a asp-controller="Admin" asp-action="AuditTrail" class="af-stat-mini block">
+                    <span class="font-black">@UiText.T(language, "FinancialAuditTrail")</span>
+                    <span class="block af-muted text-sm mt-1">@UiText.T(language, "ViewImmutable")</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="af-panel lg:col-span-2 af-dashboard-log-panel">
+            <div class="flex items-center justify-between mb-5 gap-4 shrink-0">
+                <div>
+                    <p class="af-kicker">@UiText.T(language, "RecentSecurityEvents")</p>
+                    <h2 class="text-2xl font-black mt-1">@UiText.T(language, "SecurityLogs")</h2>
+                </div>
+                <a asp-controller="Admin" asp-action="SecurityLogs" class="af-btn-secondary">@UiText.T(language, "ViewImmutable")</a>
+            </div>
+            <div class="af-log-scroll space-y-3">
+                @foreach (var l in logs)
+                {
+                    <div class="af-stat-mini flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <span class="font-mono text-sm af-muted">@l.Timestamp.ToString("g")</span>
+                        <span class="font-bold">@l.Action</span>
+                        <span class="af-badge @(l.IsSuccess ? "af-badge-green" : "af-badge-red")">@(l.IsSuccess ? UiText.T(language, "Success") : UiText.T(language, "Failed"))</span>
+                    </div>
+                }
+            </div>
+        </section>
     </div>
-</section>
+</div>

@@ -7,6 +7,7 @@
     var sidePosition = isArabic ? "right-0" : "left-0";
     var hiddenTransform = isArabic ? "translate-x-full" : "-translate-x-full";
     var mainOffset = isArabic ? "md:mr-72" : "md:ml-72";
+    var hideFooter = ViewData["HideFooter"] as bool? == true;
 }
 <!DOCTYPE html>
 <html lang="@uiLanguage" dir="@(isArabic ? "rtl" : "ltr")" data-theme="@uiTheme" class="@(uiTheme == "dark" ? "dark" : "")">
@@ -34,45 +35,47 @@
                     </div>
                 </div>
 
-                <nav class="py-4">
-                    <a asp-controller="Home" asp-action="Index" class="af-nav-link">
+                <nav class="af-sidebar-nav py-4">
+                    <a asp-controller="Home" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Dashboard") Dashboard">
                         <i class="fa-solid fa-gauge-high"></i> <span>@UiText.T(uiLanguage, "Dashboard")</span>
                     </a>
 
                     <div class="af-nav-section">@UiText.T(uiLanguage, "FinancialOperations")</div>
-                    <a asp-controller="Import" asp-action="Index" class="af-nav-link">
+                    <a asp-controller="Import" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "DataImport") Data Import Import">
                         <i class="fa-solid fa-file-import"></i> <span>@UiText.T(uiLanguage, "DataImport")</span>
                     </a>
-                    <a asp-controller="Reconcile" asp-action="Index" class="af-nav-link">
+                    <a asp-controller="Reconcile" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "RunEngine") Run Engine Reconciliation">
                         <i class="fa-solid fa-microchip"></i> <span>@UiText.T(uiLanguage, "RunEngine")</span>
                     </a>
-                    <a asp-controller="Resolve" asp-action="Index" class="af-nav-link">
+                    <a asp-controller="Resolve" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Discrepancies") Discrepancies Resolve Workbench">
                         <i class="fa-solid fa-screwdriver-wrench"></i> <span>@UiText.T(uiLanguage, "Discrepancies")</span>
                     </a>
-                    <a asp-controller="Strategic" asp-action="Index" class="af-nav-link">
+                    <a asp-controller="Strategic" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Intelligence") Intelligence Strategic">
                         <i class="fa-solid fa-chart-line"></i> <span>@UiText.T(uiLanguage, "Intelligence")</span>
                     </a>
-                    <a asp-controller="Templates" asp-action="Index" class="af-nav-link">
+                    <a asp-controller="Templates" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Templates") Templates">
                         <i class="fa-solid fa-repeat"></i> <span>@UiText.T(uiLanguage, "Templates")</span>
                     </a>
-                    <a asp-controller="Help" asp-action="Index" class="af-nav-link">
+                    <a asp-controller="Help" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "HelpCsvGuide") Help CSV Guide">
                         <i class="fa-solid fa-circle-question"></i> <span>@UiText.T(uiLanguage, "HelpCsvGuide")</span>
-                    </a>
-                    <a asp-controller="Settings" asp-action="Index" class="af-nav-link">
-                        <i class="fa-solid fa-gear"></i> <span>@UiText.T(uiLanguage, "Settings")</span>
                     </a>
 
                     @if (User?.HasClaim("role", "Admin") == true)
                     {
                         <div class="af-nav-section">@UiText.T(uiLanguage, "AdminSecurity")</div>
-                        <a asp-controller="Admin" asp-action="SecurityLogs" class="af-nav-link">
+                        <a asp-controller="Admin" asp-action="SecurityLogs" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "SecurityLogs") Security Logs">
                             <i class="fa-solid fa-shield-halved"></i> <span>@UiText.T(uiLanguage, "SecurityLogs")</span>
                         </a>
-                        <a asp-controller="Admin" asp-action="AuditTrail" class="af-nav-link">
+                        <a asp-controller="Admin" asp-action="AuditTrail" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "AuditTrail") Audit Trail Financial Audit">
                             <i class="fa-solid fa-list-check"></i> <span>@UiText.T(uiLanguage, "AuditTrail")</span>
                         </a>
                     }
                 </nav>
+                <div class="af-sidebar-bottom py-4">
+                    <a asp-controller="Settings" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Settings") Settings Preferences">
+                        <i class="fa-solid fa-gear"></i> <span>@UiText.T(uiLanguage, "Settings")</span>
+                    </a>
+                </div>
             </aside>
 
             <div class="@mainOffset af-main flex flex-col">
@@ -81,9 +84,10 @@
                         <button class="md:hidden af-btn-secondary !min-h-0 !p-3" type="button" onclick="toggleSidebar()" aria-label="Toggle navigation">
                             <i class="fa-solid fa-bars"></i>
                         </button>
-                        <div class="af-search">
+                        <div class="af-search" id="interfaceSearch">
                             <i class="fa-solid fa-magnifying-glass"></i>
-                            <span>@UiText.T(uiLanguage, "Dashboard") / AFTRS</span>
+                            <input type="search" id="interfaceSearchInput" placeholder="@UiText.T(uiLanguage, "Dashboard") / AFTRS" autocomplete="off" />
+                            <div class="af-search-results hidden" id="interfaceSearchResults"></div>
                         </div>
                     </div>
 
@@ -105,9 +109,12 @@
                     @RenderBody()
                 </main>
 
-                <footer class="af-footer p-6 text-center text-sm">
-                    &copy; 2026 AFTRS - Libyan International Medical University Capstone Project
-                </footer>
+                @if (!hideFooter)
+                {
+                    <footer class="af-footer p-6 text-center text-sm">
+                        &copy; 2026 AFTRS - Libyan International Medical University Capstone Project
+                    </footer>
+                }
             </div>
         </div>
     }
@@ -125,6 +132,54 @@
             const hiddenClass = document.documentElement.dir === 'rtl' ? 'translate-x-full' : '-translate-x-full';
             sidebar.classList.toggle(hiddenClass);
         }
+
+        (function setupInterfaceSearch() {
+            const input = document.getElementById('interfaceSearchInput');
+            const results = document.getElementById('interfaceSearchResults');
+            if (!input || !results) return;
+
+            const items = Array.from(document.querySelectorAll('[data-interface-name]')).map(link => ({
+                label: link.innerText.trim(),
+                terms: link.dataset.interfaceName.toLowerCase(),
+                href: link.href
+            }));
+
+            function render(matches) {
+                results.innerHTML = '';
+                if (!matches.length) {
+                    results.classList.add('hidden');
+                    return;
+                }
+
+                matches.slice(0, 6).forEach(item => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'af-search-result';
+                    button.textContent = item.label;
+                    button.addEventListener('click', () => window.location.href = item.href);
+                    results.appendChild(button);
+                });
+                results.classList.remove('hidden');
+            }
+
+            input.addEventListener('input', () => {
+                const query = input.value.trim().toLowerCase();
+                render(query ? items.filter(item => item.terms.includes(query) || item.label.toLowerCase().includes(query)) : []);
+            });
+
+            input.addEventListener('keydown', event => {
+                if (event.key !== 'Enter') return;
+                const first = results.querySelector('.af-search-result');
+                if (first) {
+                    event.preventDefault();
+                    first.click();
+                }
+            });
+
+            document.addEventListener('click', event => {
+                if (!document.getElementById('interfaceSearch')?.contains(event.target)) results.classList.add('hidden');
+            });
+        })();
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
