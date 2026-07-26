@@ -1,16 +1,14 @@
-﻿@model ErrorViewModel
+@model ErrorViewModel
 @{
     var language = UiText.Language(Context.Request);
     ViewData["Title"] = UiText.T(language, "Error");
 }
 
-<h1 class="text-danger">@UiText.T(language, "Error")</h1>
-<h2 class="text-danger">@UiText.T(language, "ErrorOccurred")</h2>
-
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>@UiText.T(language, "RequestId"):</strong> <code>@Model.RequestId</code>
-    </p>
-}
-
+<div class="af-card max-w-3xl mx-auto af-glow-magenta">
+    <p class="af-kicker">@UiText.T(language, "Error")</p>
+    <h1 class="af-title !text-3xl text-red-500">@UiText.T(language, "ErrorOccurred")</h1>
+    @if (Model.ShowRequestId)
+    {
+        <p class="af-muted mt-4"><strong>@UiText.T(language, "RequestId"):</strong> <code>@Model.RequestId</code></p>
+    }
+</div>

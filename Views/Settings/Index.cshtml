@@ -4,94 +4,55 @@
     var language = UiText.Language(Context.Request);
     var theme = ViewBag.Theme as string ?? UiText.Theme(Context.Request);
     var selectedLanguage = ViewBag.Language as string ?? language;
-    var isArabic = language == "ar";
     ViewData["Title"] = UiText.T(language, "SettingsTitle");
 }
 
-<div class="max-w-5xl mx-auto space-y-8">
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800">@UiText.T(language, "SettingsTitle")</h1>
-            <p class="text-gray-500 mt-1">@UiText.T(language, "SettingsSubtitle")</p>
-        </div>
-        <div class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold">
-            @(Model.Role == "Admin" ? UiText.T(language, "SystemAdministrator") : UiText.T(language, "FinancialManager"))
-        </div>
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">@UiText.T(language, "Preferences")</p>
+        <h1 class="af-title">@UiText.T(language, "SettingsTitle")</h1>
+        <p class="af-subtitle">@UiText.T(language, "SettingsSubtitle")</p>
     </div>
+    <span class="af-badge af-badge-cyan">@(Model.Role == "Admin" ? UiText.T(language, "SystemAdministrator") : UiText.T(language, "FinancialManager"))</span>
+</div>
 
-    @if (TempData["Msg"] != null)
-    {
-        <div class="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg">
-            @TempData["Msg"]
-        </div>
-    }
+@if (TempData["Msg"] != null)
+{
+    <div class="af-alert af-alert-success">@TempData["Msg"]</div>
+}
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <section class="bg-white rounded-2xl shadow border border-gray-100 p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-5">@UiText.T(language, "LoggedInUser")</h2>
-            <dl class="space-y-4">
-                <div class="flex items-center justify-between border-b pb-3 gap-4">
-                    <dt class="text-sm text-gray-500">@UiText.T(language, "Username")</dt>
-                    <dd class="font-semibold text-gray-900 text-@(isArabic ? "left" : "right")">@Model.Username</dd>
-                </div>
-                <div class="flex items-center justify-between border-b pb-3 gap-4">
-                    <dt class="text-sm text-gray-500">@UiText.T(language, "Role")</dt>
-                    <dd class="font-semibold text-gray-900">@(Model.Role == "Admin" ? UiText.T(language, "SystemAdministrator") : UiText.T(language, "FinancialManager"))</dd>
-                </div>
-                <div class="flex items-center justify-between border-b pb-3 gap-4">
-                    <dt class="text-sm text-gray-500">@UiText.T(language, "UserId")</dt>
-                    <dd class="font-mono font-semibold text-gray-900">@Model.UserID</dd>
-                </div>
-                <div class="flex items-center justify-between gap-4">
-                    <dt class="text-sm text-gray-500">@UiText.T(language, "AccountStatus")</dt>
-                    <dd>
-                        <span class="px-3 py-1 rounded-full text-xs font-bold @(Model.IsLocked ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")">
-                            @(Model.IsLocked ? UiText.T(language, "Locked") : UiText.T(language, "Active"))
-                        </span>
-                    </dd>
-                </div>
-            </dl>
-        </section>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <section class="af-panel">
+        <h2 class="text-2xl font-black mb-5">@UiText.T(language, "LoggedInUser")</h2>
+        <dl class="space-y-3">
+            <div class="af-stat-mini flex justify-between gap-4"><dt class="af-muted">@UiText.T(language, "Username")</dt><dd class="font-black">@Model.Username</dd></div>
+            <div class="af-stat-mini flex justify-between gap-4"><dt class="af-muted">@UiText.T(language, "Role")</dt><dd class="font-black">@(Model.Role == "Admin" ? UiText.T(language, "SystemAdministrator") : UiText.T(language, "FinancialManager"))</dd></div>
+            <div class="af-stat-mini flex justify-between gap-4"><dt class="af-muted">@UiText.T(language, "UserId")</dt><dd class="font-mono font-black">@Model.UserID</dd></div>
+            <div class="af-stat-mini flex justify-between gap-4"><dt class="af-muted">@UiText.T(language, "AccountStatus")</dt><dd><span class="af-badge @(Model.IsLocked ? "af-badge-red" : "af-badge-green")">@(Model.IsLocked ? UiText.T(language, "Locked") : UiText.T(language, "Active"))</span></dd></div>
+        </dl>
+    </section>
 
-        <section class="bg-white rounded-2xl shadow border border-gray-100 p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-5">@UiText.T(language, "Preferences")</h2>
-            <form asp-action="UpdatePreferences" method="post" class="space-y-6">
-                @Html.AntiForgeryToken()
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">@UiText.T(language, "Theme")</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="cursor-pointer border rounded-xl p-4 flex items-center gap-3 @(theme == "light" ? "border-blue-500 bg-blue-50" : "border-gray-200")">
-                            <input type="radio" name="theme" value="light" checked="@(theme == "light")" />
-                            <span>@UiText.T(language, "LightMode")</span>
-                        </label>
-                        <label class="cursor-pointer border rounded-xl p-4 flex items-center gap-3 @(theme == "dark" ? "border-blue-500 bg-blue-50" : "border-gray-200")">
-                            <input type="radio" name="theme" value="dark" checked="@(theme == "dark")" />
-                            <span>@UiText.T(language, "DarkMode")</span>
-                        </label>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2">@UiText.T(language, "ThemeHelp")</p>
+    <section class="af-panel">
+        <h2 class="text-2xl font-black mb-5">@UiText.T(language, "Preferences")</h2>
+        <form asp-action="UpdatePreferences" method="post" class="space-y-6">
+            @Html.AntiForgeryToken()
+            <div>
+                <label class="af-kicker mb-2 block">@UiText.T(language, "Theme")</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="af-stat-mini cursor-pointer flex items-center gap-3 @(theme == "light" ? "ring-2 ring-cyan-400" : "")"><input type="radio" name="theme" value="light" checked="@(theme == "light")" /><span>@UiText.T(language, "LightMode")</span></label>
+                    <label class="af-stat-mini cursor-pointer flex items-center gap-3 @(theme == "dark" ? "ring-2 ring-cyan-400" : "")"><input type="radio" name="theme" value="dark" checked="@(theme == "dark")" /><span>@UiText.T(language, "DarkMode")</span></label>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">@UiText.T(language, "Language")</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="cursor-pointer border rounded-xl p-4 flex items-center gap-3 @(selectedLanguage == "en" ? "border-blue-500 bg-blue-50" : "border-gray-200")">
-                            <input type="radio" name="language" value="en" checked="@(selectedLanguage == "en")" />
-                            <span>@UiText.T(language, "English")</span>
-                        </label>
-                        <label class="cursor-pointer border rounded-xl p-4 flex items-center gap-3 @(selectedLanguage == "ar" ? "border-blue-500 bg-blue-50" : "border-gray-200")">
-                            <input type="radio" name="language" value="ar" checked="@(selectedLanguage == "ar")" />
-                            <span>@UiText.T(language, "Arabic")</span>
-                        </label>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2">@UiText.T(language, "LanguageHelp")</p>
+                <p class="text-xs af-muted mt-2">@UiText.T(language, "ThemeHelp")</p>
+            </div>
+            <div>
+                <label class="af-kicker mb-2 block">@UiText.T(language, "Language")</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="af-stat-mini cursor-pointer flex items-center gap-3 @(selectedLanguage == "en" ? "ring-2 ring-cyan-400" : "")"><input type="radio" name="language" value="en" checked="@(selectedLanguage == "en")" /><span>@UiText.T(language, "English")</span></label>
+                    <label class="af-stat-mini cursor-pointer flex items-center gap-3 @(selectedLanguage == "ar" ? "ring-2 ring-cyan-400" : "")"><input type="radio" name="language" value="ar" checked="@(selectedLanguage == "ar")" /><span>@UiText.T(language, "Arabic")</span></label>
                 </div>
-
-                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
-                    @UiText.T(language, "SaveSettings")
-                </button>
-            </form>
-        </section>
-    </div>
+                <p class="text-xs af-muted mt-2">@UiText.T(language, "LanguageHelp")</p>
+            </div>
+            <button type="submit" class="af-btn-primary w-full">@UiText.T(language, "SaveSettings")</button>
+        </form>
+    </section>
 </div>

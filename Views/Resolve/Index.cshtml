@@ -4,61 +4,60 @@
     ViewData["Title"] = UiText.T(language, "DiscrepancyWorkbench");
 }
 
-<div class="p-6">
-    <h1 class="text-2xl font-bold mb-6">@UiText.T(language, "DiscrepancyWorkbench")</h1>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- LEFT: Ledger Items -->
-        <div class="bg-white p-4 rounded-xl shadow border-t-4 border-blue-500">
-            <h3 class="font-bold text-blue-700 mb-4 uppercase text-sm">@UiText.T(language, "LedgerDiscrepancies")</h3>
-            <div class="space-y-2">
-                @foreach (var item in Model.LedgerDiscrepancies)
-                {
-                    <div class="flex justify-between items-center p-3 border rounded hover:bg-blue-50 cursor-pointer" onclick="selectItem('ledger', @item.TransactionID, this)">
-                        <span>@item.Description</span>
-                        <span class="font-bold">@item.Amount LYD</span>
-                    </div>
-                }
-            </div>
-        </div>
-
-        <!-- RIGHT: Bank Items -->
-        <div class="bg-white p-4 rounded-xl shadow border-t-4 border-purple-500">
-            <h3 class="font-bold text-purple-700 mb-4 uppercase text-sm">@UiText.T(language, "BankDiscrepancies")</h3>
-            <div class="space-y-2">
-                @foreach (var item in Model.BankDiscrepancies)
-                {
-                    <div class="flex justify-between items-center p-3 border rounded hover:bg-purple-50 cursor-pointer" onclick="selectItem('bank', @item.TransactionID, this)">
-                        <span>@item.Description</span>
-                        <span class="font-bold">@item.Amount LYD</span>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <!-- Match Action Area -->
-    <div id="actionArea" class="mt-8 bg-gray-800 text-white p-6 rounded-xl hidden">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>@UiText.T(language, "SelectedLedgerId"): <span id="displayLedger" class="font-bold text-blue-400">0</span> + @UiText.T(language, "BankId"): <span id="displayBank" class="font-bold text-purple-400">0</span></p>
-            
-            <button type="button" onclick="openAuditModal()" class="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg font-bold">@UiText.T(language, "ForceMatch")</button>
-        </div>
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">@UiText.T(language, "Discrepancy")</p>
+        <h1 class="af-title">@UiText.T(language, "DiscrepancyWorkbench")</h1>
     </div>
 </div>
 
-<div id="auditModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white text-gray-900 rounded-xl shadow-xl w-full max-w-md p-6">
-        <h2 class="text-xl font-bold mb-2">@UiText.T(language, "AuditCommentRequired")</h2>
-        <p class="text-sm text-gray-600 mb-4">@UiText.T(language, "ManualLinkWarning")</p>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <section class="af-panel af-glow-cyan">
+        <h2 class="text-xl font-black mb-4 text-cyan-400">@UiText.T(language, "LedgerDiscrepancies")</h2>
+        <div class="space-y-3">
+            @foreach (var item in Model.LedgerDiscrepancies)
+            {
+                <button type="button" class="af-stat-mini w-full flex justify-between items-center gap-4 text-start" onclick="selectItem('ledger', @item.TransactionID, this)">
+                    <span>@item.Description</span>
+                    <span class="font-black">@item.Amount LYD</span>
+                </button>
+            }
+        </div>
+    </section>
+
+    <section class="af-panel af-glow-magenta">
+        <h2 class="text-xl font-black mb-4 text-purple-400">@UiText.T(language, "BankDiscrepancies")</h2>
+        <div class="space-y-3">
+            @foreach (var item in Model.BankDiscrepancies)
+            {
+                <button type="button" class="af-stat-mini w-full flex justify-between items-center gap-4 text-start" onclick="selectItem('bank', @item.TransactionID, this)">
+                    <span>@item.Description</span>
+                    <span class="font-black">@item.Amount LYD</span>
+                </button>
+            }
+        </div>
+    </section>
+</div>
+
+<section id="actionArea" class="af-panel mt-6 hidden">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <p>@UiText.T(language, "SelectedLedgerId"): <span id="displayLedger" class="font-black text-cyan-400">0</span> + @UiText.T(language, "BankId"): <span id="displayBank" class="font-black text-purple-400">0</span></p>
+        <button type="button" onclick="openAuditModal()" class="af-btn-success">@UiText.T(language, "ForceMatch")</button>
+    </div>
+</section>
+
+<div id="auditModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+    <div class="af-card w-full max-w-md">
+        <h2 class="text-2xl font-black mb-2">@UiText.T(language, "AuditCommentRequired")</h2>
+        <p class="af-muted mb-5">@UiText.T(language, "ManualLinkWarning")</p>
         <form asp-action="ForceMatch" method="post" class="space-y-4">
             @Html.AntiForgeryToken()
             <input type="hidden" name="ledgerId" id="inputLedger" />
             <input type="hidden" name="bankId" id="inputBank" />
-            <textarea name="comment" placeholder="@UiText.T(language, "ReasonManualMatch")" required class="w-full border rounded-lg px-4 py-2 min-h-28"></textarea>
+            <textarea name="comment" placeholder="@UiText.T(language, "ReasonManualMatch")" required class="min-h-28"></textarea>
             <div class="flex justify-end gap-2">
-                <button type="button" onclick="closeAuditModal()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg">@UiText.T(language, "Cancel")</button>
-                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">@UiText.T(language, "ConfirmLog")</button>
+                <button type="button" onclick="closeAuditModal()" class="af-btn-secondary">@UiText.T(language, "Cancel")</button>
+                <button type="submit" class="af-btn-success">@UiText.T(language, "ConfirmLog")</button>
             </div>
         </form>
     </div>
@@ -70,31 +69,22 @@
 
     function selectItem(type, id, element) {
         if (type === 'ledger') {
-            document.querySelectorAll('[onclick*="ledger"]').forEach(el => el.classList.remove('bg-blue-200', 'border-blue-500'));
+            document.querySelectorAll('[onclick*="ledger"]').forEach(el => el.classList.remove('ring-2', 'ring-cyan-400'));
             selectedLedger = id;
-            element.classList.add('bg-blue-200', 'border-blue-500');
+            element.classList.add('ring-2', 'ring-cyan-400');
             document.getElementById('displayLedger').innerText = id;
             document.getElementById('inputLedger').value = id;
         } else {
-            document.querySelectorAll('[onclick*="bank"]').forEach(el => el.classList.remove('bg-purple-200', 'border-purple-500'));
+            document.querySelectorAll('[onclick*="bank"]').forEach(el => el.classList.remove('ring-2', 'ring-purple-400'));
             selectedBank = id;
-            element.classList.add('bg-purple-200', 'border-purple-500');
+            element.classList.add('ring-2', 'ring-purple-400');
             document.getElementById('displayBank').innerText = id;
             document.getElementById('inputBank').value = id;
         }
 
-        if (selectedLedger && selectedBank) {
-            document.getElementById('actionArea').classList.remove('hidden');
-        }
+        if (selectedLedger && selectedBank) document.getElementById('actionArea').classList.remove('hidden');
     }
 
-    function openAuditModal() {
-        document.getElementById('auditModal').classList.remove('hidden');
-        document.getElementById('auditModal').classList.add('flex');
-    }
-
-    function closeAuditModal() {
-        document.getElementById('auditModal').classList.add('hidden');
-        document.getElementById('auditModal').classList.remove('flex');
-    }
+    function openAuditModal() { document.getElementById('auditModal').classList.remove('hidden'); document.getElementById('auditModal').classList.add('flex'); }
+    function closeAuditModal() { document.getElementById('auditModal').classList.add('hidden'); document.getElementById('auditModal').classList.remove('flex'); }
 </script>

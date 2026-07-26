@@ -1,79 +1,92 @@
 @{
     var language = UiText.Language(Context.Request);
     ViewData["Title"] = UiText.T(language, "ManagerDashboard");
+    var totalCount = ViewBag.TotalCount ?? 0;
+    var reconciledCount = ViewBag.ReconciledCount ?? 0;
+    var discrepancyCount = ViewBag.DiscrepancyCount ?? 0;
+    var matchPercent = ViewBag.MatchPercent ?? 0;
 }
-<div class="p-6">
-    <div class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800">@UiText.T(language, "ManagerDashboard")</h1>
-            <p class="text-gray-500">@UiText.T(language, "OperationalOverview")</p>
-        </div>
-        <div class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-bold">
-            @UiText.T(language, "RoleLabel"): @UiText.T(language, "FinancialManager")
-        </div>
+
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">@UiText.T(language, "CommandCenter")</p>
+        <h1 class="af-title">@UiText.T(language, "ManagerDashboard")</h1>
+        <p class="af-subtitle">@UiText.T(language, "OperationalOverview")</p>
     </div>
+    <span class="af-badge af-badge-cyan">
+        <i class="fa-solid fa-user-tie"></i> @UiText.T(language, "RoleLabel"): @UiText.T(language, "FinancialManager")
+    </span>
+</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-xl shadow border-l-4 border-blue-500 hover:shadow-md transition">
-            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">@UiText.T(language, "DataImport")</h3>
-            <p class="text-sm text-gray-500 mt-2">@UiText.T(language, "UploadLedger") / @UiText.T(language, "UploadBankStatement") (CSV/XLSX). SHA-256.</p>
-            <div class="mt-4">
-                <a asp-controller="Import" asp-action="Index" class="text-blue-600 text-sm font-bold hover:underline">@UiText.T(language, "OpenImport")</a>
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <section class="af-panel af-glow-cyan xl:col-span-2">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div>
+                <p class="af-kicker">@UiText.T(language, "SystemProgress")</p>
+                <h2 class="text-2xl font-black mt-2">@UiText.T(language, "MatchRate")</h2>
+                <p class="af-muted mt-2">@ViewBag.LedgerCount @UiText.T(language, "Ledger") / @ViewBag.BankCount @UiText.T(language, "Bank") @UiText.T(language, "Records")</p>
+            </div>
+            <div class="af-ring relative" style="--value:@matchPercent">
+                <span>@matchPercent%</span>
             </div>
         </div>
-
-        <!-- Card 2: Discrepancies -->
-        <div class="bg-white p-6 rounded-xl shadow border-l-4 border-red-500 hover:shadow-md transition">
-            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">@UiText.T(language, "PendingDiscrepancies")</h3>
-            <p class="text-4xl font-black text-red-600">@(ViewBag.DiscrepancyCount ?? 0)</p>
-            <p class="text-xs text-gray-400 mb-4">@UiText.T(language, "RequiresManualResolution")</p>
-            <a asp-controller="Resolve" asp-action="Index" class="text-red-600 text-sm font-bold hover:underline">@UiText.T(language, "OpenWorkbench")</a>
-        </div>
-
-        <!-- Card 3: System Actions -->
-        <div class="bg-white p-6 rounded-xl shadow border-l-4 border-green-500 hover:shadow-md transition">
-            <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">@UiText.T(language, "QuickActions")</h3>
-            <ul class="mt-4 space-y-3">
-                <li>
-                    <a asp-controller="Reconcile" asp-action="Index" class="flex items-center text-gray-700 hover:text-green-600">
-                        <span class="mr-2"><i class="fa-solid fa-microchip"></i></span> @UiText.T(language, "RunReconciliation")
-                    </a>
-                </li>
-                <li>
-                    <a asp-controller="Strategic" asp-action="Index" class="flex items-center text-gray-700 hover:text-green-600">
-                        <span class="mr-2"><i class="fa-solid fa-chart-line"></i></span> @UiText.T(language, "ViewIntelligence")
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
-
-    @if ((ViewBag.TotalCount ?? 0) > 0)
-    {
-        <div class="mt-8 bg-white p-6 rounded-xl shadow">
-            <h2 class="text-lg font-bold text-gray-700 mb-4">@UiText.T(language, "SystemProgress")</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div class="bg-gray-50 rounded-lg p-4 text-center">
-                    <p class="text-3xl font-black text-gray-800">@ViewBag.TotalCount</p>
-                    <p class="text-xs text-gray-500 uppercase mt-1">@UiText.T(language, "TotalTransactions")</p>
-                </div>
-                <div class="bg-green-50 rounded-lg p-4 text-center">
-                    <p class="text-3xl font-black text-green-600">@ViewBag.ReconciledCount</p>
-                    <p class="text-xs text-gray-500 uppercase mt-1">@UiText.T(language, "Reconciled")</p>
-                </div>
-                <div class="bg-red-50 rounded-lg p-4 text-center">
-                    <p class="text-3xl font-black text-red-600">@ViewBag.DiscrepancyCount</p>
-                    <p class="text-xs text-gray-500 uppercase mt-1">@UiText.T(language, "Discrepancies")</p>
-                </div>
-                <div class="bg-blue-50 rounded-lg p-4 text-center">
-                    <p class="text-3xl font-black text-blue-600">@ViewBag.MatchPercent%</p>
-                    <p class="text-xs text-gray-500 uppercase mt-1">@UiText.T(language, "MatchRate")</p>
-                </div>
+        <div class="af-progress mt-8"><span style="width: @matchPercent%"></span></div>
+        <div class="af-stat-strip mt-6">
+            <div class="af-stat-mini">
+                <p class="af-kicker">@UiText.T(language, "TotalTransactions")</p>
+                <p class="text-3xl font-black mt-1">@totalCount</p>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-3">
-                <div class="bg-green-500 h-3 rounded-full transition-all duration-1000" style="width: @ViewBag.MatchPercent%"></div>
+            <div class="af-stat-mini">
+                <p class="af-kicker">@UiText.T(language, "Reconciled")</p>
+                <p class="text-3xl font-black mt-1 text-green-500">@reconciledCount</p>
             </div>
-            <p class="text-xs text-gray-400 mt-1 text-right">@ViewBag.MatchPercent% @UiText.T(language, "Reconciled") | @ViewBag.LedgerCount @UiText.T(language, "Ledger") / @ViewBag.BankCount @UiText.T(language, "Bank") @UiText.T(language, "Records")</p>
         </div>
-    }
+    </section>
+
+    <section class="af-panel af-glow-magenta">
+        <p class="af-kicker">@UiText.T(language, "PendingDiscrepancies")</p>
+        <p class="af-value text-red-500">@discrepancyCount</p>
+        <p class="af-muted mb-6">@UiText.T(language, "RequiresManualResolution")</p>
+        <a asp-controller="Resolve" asp-action="Index" class="af-btn-primary w-full">
+            <i class="fa-solid fa-screwdriver-wrench"></i> @UiText.T(language, "OpenWorkbench")
+        </a>
+    </section>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+    <section class="af-card">
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <p class="af-kicker">@UiText.T(language, "DataImport")</p>
+                <h3 class="text-xl font-black mt-2">CSV / XLSX</h3>
+            </div>
+            <i class="fa-solid fa-file-import text-3xl text-cyan-400"></i>
+        </div>
+        <p class="af-muted mt-4">@UiText.T(language, "UploadLedger") / @UiText.T(language, "UploadBankStatement") . SHA-256.</p>
+        <a asp-controller="Import" asp-action="Index" class="af-btn-secondary w-full mt-6">@UiText.T(language, "OpenImport")</a>
+    </section>
+
+    <section class="af-card">
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <p class="af-kicker">@UiText.T(language, "RunEngine")</p>
+                <h3 class="text-xl font-black mt-2">@UiText.T(language, "RunReconciliation")</h3>
+            </div>
+            <i class="fa-solid fa-microchip text-3xl text-purple-400"></i>
+        </div>
+        <p class="af-muted mt-4">@UiText.T(language, "AutoReconciled") / @UiText.T(language, "ManualReconciled") / @UiText.T(language, "Discrepancy")</p>
+        <a asp-controller="Reconcile" asp-action="Index" class="af-btn-secondary w-full mt-6">@UiText.T(language, "RunReconciliation")</a>
+    </section>
+
+    <section class="af-card">
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <p class="af-kicker">@UiText.T(language, "Intelligence")</p>
+                <h3 class="text-xl font-black mt-2">@UiText.T(language, "ViewIntelligence")</h3>
+            </div>
+            <i class="fa-solid fa-chart-line text-3xl text-green-400"></i>
+        </div>
+        <p class="af-muted mt-4">@UiText.T(language, "BudgetActualTitle")</p>
+        <a asp-controller="Strategic" asp-action="Index" class="af-btn-secondary w-full mt-6">@UiText.T(language, "ViewIntelligence")</a>
+    </section>
 </div>

@@ -5,50 +5,31 @@
     var users = ViewBag.Users as IEnumerable<AFTRS.Models.User> ?? new List<AFTRS.Models.User>();
     int? selectedUserId = ViewBag.SelectedUserId as int?;
 }
-<div class="p-6">
-    <h1 class="text-2xl font-bold mb-6">@UiText.T(language, "SecurityLogsTitle")</h1>
-    <form method="get" class="bg-white rounded-lg shadow p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">@UiText.T(language, "FilterByDate")</label>
-            <input type="date" name="date" value="@ViewBag.SelectedDate" class="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">@UiText.T(language, "FilterByUser")</label>
-            <select name="userId" class="w-full border rounded px-3 py-2">
-                <option value="">@UiText.T(language, "AllUsers")</option>
-                @foreach (var user in users)
-                {
-                    <option value="@user.UserID" selected="@(selectedUserId == user.UserID)">@user.Username</option>
-                }
-            </select>
-        </div>
-        <div class="flex items-end gap-2">
-            <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded">@UiText.T(language, "ApplyFilter")</button>
-            <a asp-action="SecurityLogs" class="bg-gray-100 text-gray-700 px-4 py-2 rounded">@UiText.T(language, "Clear")</a>
-        </div>
-    </form>
-    <table class="min-w-full bg-white rounded-lg overflow-hidden shadow">
-        <thead class="bg-gray-800 text-white">
-            <tr>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "Timestamp")</th>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "User")</th>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "IpAddress")</th>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "Action")</th>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "Status")</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y">
+
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">@UiText.T(language, "AdminSecurity")</p>
+        <h1 class="af-title">@UiText.T(language, "SecurityLogsTitle")</h1>
+    </div>
+</div>
+
+<form method="get" class="af-panel mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div><label class="af-kicker mb-2 block">@UiText.T(language, "FilterByDate")</label><input type="date" name="date" value="@ViewBag.SelectedDate" /></div>
+    <div><label class="af-kicker mb-2 block">@UiText.T(language, "FilterByUser")</label><select name="userId"><option value="">@UiText.T(language, "AllUsers")</option>@foreach (var user in users) { <option value="@user.UserID" selected="@(selectedUserId == user.UserID)">@user.Username</option> }</select></div>
+    <div class="flex items-end gap-2"><button type="submit" class="af-btn-primary">@UiText.T(language, "ApplyFilter")</button><a asp-action="SecurityLogs" class="af-btn-secondary">@UiText.T(language, "Clear")</a></div>
+</form>
+
+<div class="af-table-wrap">
+    <table class="af-table">
+        <thead><tr><th>@UiText.T(language, "Timestamp")</th><th>@UiText.T(language, "User")</th><th>@UiText.T(language, "IpAddress")</th><th>@UiText.T(language, "Action")</th><th>@UiText.T(language, "Status")</th></tr></thead>
+        <tbody>
             @foreach (var log in Model) {
                 <tr>
-                    <td class="py-3 px-4">@log.Timestamp</td>
-                    <td class="py-3 px-4">@log.User?.Username</td>
-                    <td class="py-3 px-4">@log.IPAddress</td>
-                    <td class="py-3 px-4">@log.Action</td>
-                    <td class="py-3 px-4">
-                        <span class="px-2 py-1 rounded @(log.IsSuccess ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
-                            @(log.IsSuccess ? UiText.T(language, "Success") : UiText.T(language, "Failed"))
-                        </span>
-                    </td>
+                    <td>@log.Timestamp</td>
+                    <td class="font-bold">@log.User?.Username</td>
+                    <td class="font-mono text-xs af-muted">@log.IPAddress</td>
+                    <td>@log.Action</td>
+                    <td><span class="af-badge @(log.IsSuccess ? "af-badge-green" : "af-badge-red")">@(log.IsSuccess ? UiText.T(language, "Success") : UiText.T(language, "Failed"))</span></td>
                 </tr>
             }
         </tbody>

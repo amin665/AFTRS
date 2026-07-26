@@ -4,87 +4,63 @@
     ViewData["Title"] = UiText.T(language, "ReconciliationDashboard");
 }
 
-<div class="p-6">
-    <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">@UiText.T(language, "ReconciliationDashboard")</h1>
-    
-    <div class="flex gap-2">
-        <a asp-controller="Reports" asp-action="ReconciliationPdf" class="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-black shadow transition">@UiText.T(language, "ExportPdf")</a>
-        <a asp-controller="Reports" asp-action="ReconciliationExcel" class="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 shadow transition">@UiText.T(language, "ExportExcel")</a>
-        <form asp-action="CategorizeOnly" method="post">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 shadow transition">@UiText.T(language, "Categorize")</button>
-        </form>
-        <!-- The Run Engine Button -->
-        <form asp-action="RunEngine" method="post" id="engineForm">
-            @Html.AntiForgeryToken()
-            <button type="submit" id="runBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-lg transition flex items-center">
-                <span id="btnText">@UiText.T(language, "RunReconciliationEngine")</span>
-                <span id="spinner" class="hidden ml-2 animate-spin">
-                    <i class="fa-solid fa-circle-notch"></i>
-                </span>
-            </button>
- </form>
-
-        
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">@UiText.T(language, "RunEngine")</p>
+        <h1 class="af-title">@UiText.T(language, "ReconciliationDashboard")</h1>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <a asp-controller="Reports" asp-action="ReconciliationPdf" class="af-btn-secondary">@UiText.T(language, "ExportPdf")</a>
+        <a asp-controller="Reports" asp-action="ReconciliationExcel" class="af-btn-secondary">@UiText.T(language, "ExportExcel")</a>
+        <form asp-action="CategorizeOnly" method="post">@Html.AntiForgeryToken()<button type="submit" class="af-btn-secondary">@UiText.T(language, "Categorize")</button></form>
+        <form asp-action="RunEngine" method="post" id="engineForm">@Html.AntiForgeryToken()<button type="submit" id="runBtn" class="af-btn-primary"><span id="btnText">@UiText.T(language, "RunReconciliationEngine")</span><span id="spinner" class="hidden animate-spin"><i class="fa-solid fa-circle-notch"></i></span></button></form>
     </div>
 </div>
 
-    @if (TempData["Msg"] != null)
-    {
-        <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6">@TempData["Msg"]</div>
-    }
+@if (TempData["Msg"] != null)
+{
+    <div class="af-alert">@TempData["Msg"]</div>
+}
 
-    <div class="flex gap-4 mb-4 text-xs font-medium">
-        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-400 inline-block"></span> @UiText.T(language, "AutoReconciled")</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> @UiText.T(language, "ManualReconciled")</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-400 inline-block"></span> @UiText.T(language, "Discrepancy")</span>
-    </div>
+<div class="flex flex-wrap gap-3 mb-4">
+    <span class="af-badge af-badge-green">@UiText.T(language, "AutoReconciled")</span>
+    <span class="af-badge af-badge-yellow">@UiText.T(language, "ManualReconciled")</span>
+    <span class="af-badge af-badge-red">@UiText.T(language, "Discrepancy")</span>
+</div>
 
-    <div class="bg-white rounded-xl shadow overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+<div class="af-table-wrap">
+    <table class="af-table">
+        <thead>
+            <tr>
+                <th>@UiText.T(language, "Date")</th>
+                <th>@UiText.T(language, "Description")</th>
+                <th>@UiText.T(language, "Amount")</th>
+                <th>@UiText.T(language, "Source")</th>
+                <th>@UiText.T(language, "Category")</th>
+                <th>@UiText.T(language, "Status")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                var statusClass = item.Status == "Reconciled" ? (item.MatchMethod == "Manual" ? "af-badge-yellow" : "af-badge-green") : "af-badge-red";
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Date")</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Description")</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Amount")</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Source")</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Category")</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">@UiText.T(language, "Status")</th>
+                    <td>@item.TransactionDate.ToString("dd/MM/yyyy")</td>
+                    <td>@item.Description</td>
+                    <td class="font-black">@item.Amount.ToString("N2") LYD</td>
+                    <td><span class="af-badge @(item.Source == "Bank" ? "af-badge-purple" : "af-badge-cyan")">@item.Source</span></td>
+                    <td class="af-muted">@(item.Category?.Name ?? "-")</td>
+                    <td><span class="af-badge @statusClass">@item.Status</span></td>
                 </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                @foreach (var item in Model)
-                {
-                    var statusColor = item.Status == "Reconciled"
-                        ? (item.MatchMethod == "Manual" ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800")
-                        : "bg-red-100 text-red-800";
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">@item.TransactionDate.ToString("dd/MM/yyyy")</td>
-                        <td class="px-6 py-4">@item.Description</td>
-                        <td class="px-6 py-4 font-bold">@item.Amount.ToString("N2") LYD</td>
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 rounded text-xs @(item.Source == "Bank" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700")">
-                                @item.Source
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-xs text-gray-500">@(item.Category?.Name ?? "-")</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold @statusColor">
-                                @item.Status
-                            </span>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+            }
+        </tbody>
+    </table>
 </div>
 
 <script>
     document.getElementById('engineForm').onsubmit = function() {
         document.getElementById('runBtn').disabled = true;
-        document.getElementById('runBtn').classList.add('opacity-50', 'cursor-not-allowed');
+        document.getElementById('runBtn').classList.add('opacity-60', 'cursor-not-allowed');
         document.getElementById('btnText').innerText = "@UiText.T(language, "ProcessingTransactions")";
         document.getElementById('spinner').classList.remove('hidden');
     };

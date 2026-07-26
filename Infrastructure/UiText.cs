@@ -222,6 +222,11 @@ public static class UiText
         , ["DescriptionNameRequired"] = "DescriptionName is required."
         , ["AmountGreaterThanZero"] = "Amount must be greater than zero."
         , ["TemplateCreated"] = "Template created."
+        , ["Logout"] = "Logout"
+        , ["CommandCenter"] = "AFTRS Command Center"
+        , ["SecurityOperations"] = "Security Operations"
+        , ["SecurePortal"] = "AFTRS Secure Portal"
+        , ["Enrollment"] = "AFTRS Enrollment"
     };
 
     private static readonly IReadOnlyDictionary<string, string> Arabic = new Dictionary<string, string>
@@ -422,5 +427,10 @@ public static class UiText
         , ["DescriptionNameRequired"] = "اسم الوصف مطلوب."
         , ["AmountGreaterThanZero"] = "يجب أن يكون المبلغ أكبر من صفر."
         , ["TemplateCreated"] = "تم إنشاء القالب."
+        , ["Logout"] = "تسجيل الخروج"
+        , ["CommandCenter"] = "مركز قيادة AFTRS"
+        , ["SecurityOperations"] = "عمليات الأمان"
+        , ["SecurePortal"] = "بوابة AFTRS الآمنة"
+        , ["Enrollment"] = "تسجيل AFTRS"
     };
 }

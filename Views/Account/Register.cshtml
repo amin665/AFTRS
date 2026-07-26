@@ -4,25 +4,21 @@
     ViewData["Title"] = UiText.T(language, "Register");
 }
 
-<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
-        <h2 class="text-center text-3xl font-extrabold text-gray-900">@UiText.T(language, "CreateAccount")</h2>
-        
-        <form class="mt-8 space-y-6" asp-action="Register" method="post">
-            <div asp-validation-summary="All" class="text-red-500 text-sm"></div>
-            
-            <div class="space-y-4">
-                <input asp-for="Email" class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="@UiText.T(language, "EmailAddress")">
-                
-                <input asp-for="Password" class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="@UiText.T(language, "Password")">
-                
-                <input asp-for="ConfirmPassword" class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="@UiText.T(language, "ConfirmPassword")">
-                <p class="text-xs text-gray-500">@UiText.T(language, "DefaultManagerRole")</p>
-            </div>
+<div class="af-auth-page">
+    <div class="af-card af-auth-card af-glow-green">
+        <div class="text-center mb-8">
+            <div class="af-brand-mark mx-auto mb-4">A</div>
+            <p class="af-kicker">@UiText.T(language, "Enrollment")</p>
+            <h1 class="af-title !text-3xl mt-2">@UiText.T(language, "CreateAccount")</h1>
+            <p class="af-muted mt-2">@UiText.T(language, "DefaultManagerRole")</p>
+        </div>
 
-            <button type="submit" class="w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                @UiText.T(language, "Register")
-            </button>
+        <form class="space-y-5" asp-action="Register" method="post">
+            <div asp-validation-summary="All" class="text-red-500 text-sm"></div>
+            <input asp-for="Email" placeholder="@UiText.T(language, "EmailAddress")" />
+            <input asp-for="Password" placeholder="@UiText.T(language, "Password")" />
+            <input asp-for="ConfirmPassword" placeholder="@UiText.T(language, "ConfirmPassword")" />
+            <button type="submit" class="af-btn-success w-full">@UiText.T(language, "Register")</button>
         </form>
     </div>
 </div>

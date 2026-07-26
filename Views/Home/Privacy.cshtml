@@ -1,7 +1,10 @@
-﻿@{
+@{
     var language = UiText.Language(Context.Request);
     ViewData["Title"] = UiText.T(language, "PrivacyPolicy");
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>@UiText.T(language, "PrivacyText")</p>
+<div class="af-card max-w-3xl mx-auto">
+    <p class="af-kicker">AFTRS</p>
+    <h1 class="af-title !text-3xl">@ViewData["Title"]</h1>
+    <p class="af-muted mt-4">@UiText.T(language, "PrivacyText")</p>
+</div>

@@ -1,10 +1,12 @@
-﻿@using AFTRS.Infrastructure
+@using AFTRS.Infrastructure
 @{
     var uiLanguage = UiText.Language(Context.Request);
     var uiTheme = UiText.Theme(Context.Request);
     var isArabic = uiLanguage == "ar";
-    var iconMargin = isArabic ? "ml-3" : "mr-3";
-    var mainOffset = isArabic ? "md:mr-64" : "md:ml-64";
+    var isAuthenticated = User?.Identity?.IsAuthenticated == true;
+    var sidePosition = isArabic ? "right-0" : "left-0";
+    var hiddenTransform = isArabic ? "translate-x-full" : "-translate-x-full";
+    var mainOffset = isArabic ? "md:mr-72" : "md:ml-72";
 }
 <!DOCTYPE html>
 <html lang="@uiLanguage" dir="@(isArabic ? "rtl" : "ltr")" data-theme="@uiTheme" class="@(uiTheme == "dark" ? "dark" : "")">
@@ -17,123 +19,109 @@
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <style>
-        html[data-theme="dark"] body { background: #0f172a; color: #e5e7eb; }
-        html[data-theme="dark"] .bg-white { background-color: #1e293b !important; }
-        html[data-theme="dark"] .bg-gray-50 { background-color: #0f172a !important; }
-        html[data-theme="dark"] .bg-gray-100 { background-color: #334155 !important; }
-        html[data-theme="dark"] .text-gray-900,
-        html[data-theme="dark"] .text-gray-800,
-        html[data-theme="dark"] .text-gray-700 { color: #f8fafc !important; }
-        html[data-theme="dark"] .text-gray-600,
-        html[data-theme="dark"] .text-gray-500,
-        html[data-theme="dark"] .text-gray-400 { color: #cbd5e1 !important; }
-        html[data-theme="dark"] .border,
-        html[data-theme="dark"] .border-b,
-        html[data-theme="dark"] .border-t,
-        html[data-theme="dark"] .border-gray-100,
-        html[data-theme="dark"] .border-gray-200,
-        html[data-theme="dark"] .border-gray-300 { border-color: #334155 !important; }
-        html[data-theme="dark"] input,
-        html[data-theme="dark"] select,
-        html[data-theme="dark"] textarea { background-color: #0f172a; color: #f8fafc; border-color: #475569; }
-        html[data-theme="dark"] table thead.bg-gray-50,
-        html[data-theme="dark"] table thead.bg-gray-100 { background-color: #334155 !important; }
-        html[data-theme="dark"] .shadow,
-        html[data-theme="dark"] .shadow-md,
-        html[data-theme="dark"] .shadow-lg,
-        html[data-theme="dark"] .shadow-xl { box-shadow: 0 10px 25px rgba(0,0,0,.35) !important; }
-    </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="bg-gray-50 text-gray-900">
-
-    <!-- SIDEBAR -->
-    <aside class="fixed inset-y-0 @(isArabic ? "right-0" : "left-0") bg-slate-900 w-64 transition-transform duration-300 transform @(isArabic ? "translate-x-full" : "-translate-x-full") md:translate-x-0 z-50" id="sidebar">
-        <div class="flex items-center justify-center h-16 bg-slate-950">
-            <span class="text-white text-2xl font-black tracking-widest">AFTRS</span>
-        </div>
-        
-        <nav class="mt-5 px-4 space-y-2">
-            <!-- Common Home -->
-            <a asp-controller="Home" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
-                <i class="fa-solid fa-gauge-high @iconMargin"></i> @UiText.T(uiLanguage, "Dashboard")
-            </a>
-
-            @if (User?.Identity?.IsAuthenticated == true)
-            {
-                <div class="text-xs font-bold text-gray-500 uppercase mt-6 mb-2 px-4">@UiText.T(uiLanguage, "FinancialOperations")</div>
-                <a asp-controller="Import" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
-                    <i class="fa-solid fa-file-import @iconMargin"></i> @UiText.T(uiLanguage, "DataImport")
-                </a>
-                <a asp-controller="Reconcile" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
-                    <i class="fa-solid fa-microchip @iconMargin"></i> @UiText.T(uiLanguage, "RunEngine")
-                </a>
-                <a asp-controller="Resolve" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
-                    <i class="fa-solid fa-screwdriver-wrench @iconMargin"></i> @UiText.T(uiLanguage, "Discrepancies")
-                </a>
-                <a asp-controller="Strategic" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
-                    <i class="fa-solid fa-chart-line @iconMargin"></i> @UiText.T(uiLanguage, "Intelligence")
-                </a>
-                <a asp-controller="Templates" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
-                    <i class="fa-solid fa-repeat @iconMargin"></i> @UiText.T(uiLanguage, "Templates")
-                </a>
-                <a asp-controller="Help" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
-                    <i class="fa-solid fa-circle-question @iconMargin"></i> @UiText.T(uiLanguage, "HelpCsvGuide")
-                </a>
-                <a asp-controller="Settings" asp-action="Index" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
-                    <i class="fa-solid fa-gear @iconMargin"></i> @UiText.T(uiLanguage, "Settings")
-                </a>
-            }
-
-            @if (User?.HasClaim("role", "Admin") == true)
-            {
-                <div class="text-xs font-bold text-gray-500 uppercase mt-6 mb-2 px-4">@UiText.T(uiLanguage, "AdminSecurity")</div>
-                <a asp-controller="Admin" asp-action="SecurityLogs" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
-                    <i class="fa-solid fa-shield-halved @iconMargin"></i> @UiText.T(uiLanguage, "SecurityLogs")
-                </a>
-                <a asp-controller="Admin" asp-action="AuditTrail" class="flex items-center text-gray-300 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
-                    <i class="fa-solid fa-list-check @iconMargin"></i> @UiText.T(uiLanguage, "AuditTrail")
-                </a>
-            }
-        </nav>
-    </aside>
-
-    <!-- MAIN CONTENT AREA -->
-    <div class="@mainOffset flex flex-col min-h-screen">
-        
-        <!-- HEADER -->
-        <header class="h-16 bg-white border-b flex items-center justify-between px-8 sticky top-0 z-40">
-            <button class="md:hidden text-gray-600" onclick="toggleSidebar()">
-                <i class="fa-solid fa-bars text-xl"></i>
-            </button>
-            
-            <div class="flex items-center gap-4 @(isArabic ? "mr-auto" : "ml-auto")">
-                <div class="@(isArabic ? "text-left" : "text-right") hidden sm:block">
-                    <p class="text-sm font-bold text-gray-800">@User?.Identity?.Name</p>
-                    <p class="text-xs text-gray-500 uppercase">@((User?.HasClaim("role", "Admin") == true) ? UiText.T(uiLanguage, "SystemAdministrator") : UiText.T(uiLanguage, "FinancialManager"))</p>
+<body>
+    @if (isAuthenticated)
+    {
+        <div class="af-shell">
+            <aside class="af-sidebar fixed inset-y-0 @sidePosition transition-transform duration-300 transform @hiddenTransform md:translate-x-0 z-50" id="sidebar">
+                <div class="af-brand">
+                    <div class="af-brand-mark">A</div>
+                    <div>
+                        <div class="af-brand-title">AFTRS</div>
+                        <div class="af-brand-subtitle">@UiText.T(uiLanguage, "ReconciliationDashboard")</div>
+                    </div>
                 </div>
-                <form asp-controller="Account" asp-action="Logout" method="post">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 p-2 rounded-full transition">
-                        <i class="fa-solid fa-power-off"></i>
-                    </button>
-                </form>
-            </div>
-        </header>
 
-        <!-- PAGE BODY -->
-        <main class="p-8 flex-grow">
+                <nav class="py-4">
+                    <a asp-controller="Home" asp-action="Index" class="af-nav-link">
+                        <i class="fa-solid fa-gauge-high"></i> <span>@UiText.T(uiLanguage, "Dashboard")</span>
+                    </a>
+
+                    <div class="af-nav-section">@UiText.T(uiLanguage, "FinancialOperations")</div>
+                    <a asp-controller="Import" asp-action="Index" class="af-nav-link">
+                        <i class="fa-solid fa-file-import"></i> <span>@UiText.T(uiLanguage, "DataImport")</span>
+                    </a>
+                    <a asp-controller="Reconcile" asp-action="Index" class="af-nav-link">
+                        <i class="fa-solid fa-microchip"></i> <span>@UiText.T(uiLanguage, "RunEngine")</span>
+                    </a>
+                    <a asp-controller="Resolve" asp-action="Index" class="af-nav-link">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> <span>@UiText.T(uiLanguage, "Discrepancies")</span>
+                    </a>
+                    <a asp-controller="Strategic" asp-action="Index" class="af-nav-link">
+                        <i class="fa-solid fa-chart-line"></i> <span>@UiText.T(uiLanguage, "Intelligence")</span>
+                    </a>
+                    <a asp-controller="Templates" asp-action="Index" class="af-nav-link">
+                        <i class="fa-solid fa-repeat"></i> <span>@UiText.T(uiLanguage, "Templates")</span>
+                    </a>
+                    <a asp-controller="Help" asp-action="Index" class="af-nav-link">
+                        <i class="fa-solid fa-circle-question"></i> <span>@UiText.T(uiLanguage, "HelpCsvGuide")</span>
+                    </a>
+                    <a asp-controller="Settings" asp-action="Index" class="af-nav-link">
+                        <i class="fa-solid fa-gear"></i> <span>@UiText.T(uiLanguage, "Settings")</span>
+                    </a>
+
+                    @if (User?.HasClaim("role", "Admin") == true)
+                    {
+                        <div class="af-nav-section">@UiText.T(uiLanguage, "AdminSecurity")</div>
+                        <a asp-controller="Admin" asp-action="SecurityLogs" class="af-nav-link">
+                            <i class="fa-solid fa-shield-halved"></i> <span>@UiText.T(uiLanguage, "SecurityLogs")</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="AuditTrail" class="af-nav-link">
+                            <i class="fa-solid fa-list-check"></i> <span>@UiText.T(uiLanguage, "AuditTrail")</span>
+                        </a>
+                    }
+                </nav>
+            </aside>
+
+            <div class="@mainOffset af-main flex flex-col">
+                <header class="af-topbar">
+                    <div class="flex items-center gap-4">
+                        <button class="md:hidden af-btn-secondary !min-h-0 !p-3" type="button" onclick="toggleSidebar()" aria-label="Toggle navigation">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                        <div class="af-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span>@UiText.T(uiLanguage, "Dashboard") / AFTRS</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="@(isArabic ? "text-left" : "text-right") hidden sm:block">
+                            <p class="text-sm font-black">@User?.Identity?.Name</p>
+                            <p class="af-kicker">@((User?.HasClaim("role", "Admin") == true) ? UiText.T(uiLanguage, "SystemAdministrator") : UiText.T(uiLanguage, "FinancialManager"))</p>
+                        </div>
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="af-btn-secondary !min-h-0 !p-3" title="@UiText.T(uiLanguage, "Logout")">
+                                <i class="fa-solid fa-power-off"></i>
+                            </button>
+                        </form>
+                    </div>
+                </header>
+
+                <main class="af-page flex-grow">
+                    @RenderBody()
+                </main>
+
+                <footer class="af-footer p-6 text-center text-sm">
+                    &copy; 2026 AFTRS - Libyan International Medical University Capstone Project
+                </footer>
+            </div>
+        </div>
+    }
+    else
+    {
+        <main>
             @RenderBody()
         </main>
-
-        <footer class="p-8 text-center text-gray-400 text-sm border-t bg-white">
-            &copy; 2026 AFTRS - Libyan International Medical University Capstone Project
-        </footer>
-    </div>
+    }
 
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
             const hiddenClass = document.documentElement.dir === 'rtl' ? 'translate-x-full' : '-translate-x-full';
             sidebar.classList.toggle(hiddenClass);
         }

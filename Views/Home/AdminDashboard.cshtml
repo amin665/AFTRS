@@ -1,51 +1,62 @@
 @{
     var language = UiText.Language(Context.Request);
     ViewData["Title"] = UiText.T(language, "AdminDashboard");
+    var logs = (IEnumerable<AFTRS.Models.SecurityLog>)(ViewBag.RecentSecurityLogs ?? new List<AFTRS.Models.SecurityLog>());
 }
-<div class="p-6">
-    <h1 class="text-3xl font-bold mb-2 text-gray-800">@UiText.T(language, "AdminDashboard")</h1>
-    <p class="text-gray-500 mb-8">@UiText.T(language, "SecurityMonitoring")</p>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="space-y-6">
-            <div class="bg-gray-800 text-white p-8 rounded-2xl shadow-xl">
-                <p class="text-gray-400 uppercase text-xs font-bold">@UiText.T(language, "TotalRegisteredUsers")</p>
-                <p class="text-5xl font-black">@ViewBag.TotalUsers</p>
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">@UiText.T(language, "SecurityOperations")</p>
+        <h1 class="af-title">@UiText.T(language, "AdminDashboard")</h1>
+        <p class="af-subtitle">@UiText.T(language, "SecurityMonitoring")</p>
+    </div>
+    <span class="af-badge af-badge-purple"><i class="fa-solid fa-shield-halved"></i> @UiText.T(language, "SystemAdministrator")</span>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <section class="af-panel af-glow-magenta">
+        <p class="af-kicker">@UiText.T(language, "TotalRegisteredUsers")</p>
+        <p class="af-value">@ViewBag.TotalUsers</p>
+        <p class="af-muted">@UiText.T(language, "StandaloneNote")</p>
+    </section>
+
+    <section class="af-panel lg:col-span-2">
+        <div class="flex items-center justify-between mb-5 gap-4">
+            <div>
+                <p class="af-kicker">@UiText.T(language, "RecentSecurityEvents")</p>
+                <h2 class="text-2xl font-black mt-1">@UiText.T(language, "SecurityLogs")</h2>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow border-2 border-gray-100">
-                <p class="text-gray-400 uppercase text-xs font-bold">@UiText.T(language, "RecentSecurityEvents")</p>
-                <div class="mt-3 space-y-2">
-                    @foreach (var l in (IEnumerable<AFTRS.Models.SecurityLog>)(ViewBag.RecentSecurityLogs ?? new List<AFTRS.Models.SecurityLog>()))
-                    {
-                        <div class="flex justify-between text-xs">
-                            <span class="font-mono text-gray-600">@l.Timestamp.ToString("g")</span>
-                            <span class="text-gray-700">@l.Action</span>
-                            <span class="@(l.IsSuccess ? "text-green-600" : "text-red-600")">@(l.IsSuccess ? UiText.T(language, "Success") : UiText.T(language, "Failed"))</span>
-                        </div>
-                    }
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl shadow border-2 border-gray-100">
-                <p class="text-gray-400 uppercase text-xs font-bold">@UiText.T(language, "TotalSessionsProcessed")</p>
-                <p class="text-4xl font-bold text-blue-600">N/A</p>
-                <p class="text-xs text-gray-500 mt-2">@UiText.T(language, "StandaloneNote")</p>
-            </div>
+            <a asp-controller="Admin" asp-action="SecurityLogs" class="af-btn-secondary">@UiText.T(language, "ViewImmutable")</a>
         </div>
+        <div class="space-y-3">
+            @foreach (var l in logs)
+            {
+                <div class="af-stat-mini flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span class="font-mono text-sm af-muted">@l.Timestamp.ToString("g")</span>
+                    <span class="font-bold">@l.Action</span>
+                    <span class="af-badge @(l.IsSuccess ? "af-badge-green" : "af-badge-red")">@(l.IsSuccess ? UiText.T(language, "Success") : UiText.T(language, "Failed"))</span>
+                </div>
+            }
+        </div>
+    </section>
+</div>
 
-        <div class="bg-white p-8 rounded-2xl shadow border-2 border-blue-50">
-            <h2 class="text-xl font-bold mb-6 flex items-center">
-                <span class="mr-2 text-blue-600"><i class="fa-solid fa-shield-halved"></i></span> @UiText.T(language, "ComplianceControls")
-            </h2>
-            <div class="space-y-4">
-                <a asp-controller="Admin" asp-action="SecurityLogs" class="block p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-blue-500 transition group">
-                    <p class="font-bold group-hover:text-blue-600">@UiText.T(language, "SecurityLogs")</p>
-                    <p class="text-xs text-gray-500">@UiText.T(language, "TrackAccess")</p>
-                </a>
-                <a asp-controller="Admin" asp-action="AuditTrail" class="block p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-blue-500 transition group">
-                    <p class="font-bold group-hover:text-blue-600">@UiText.T(language, "FinancialAuditTrail")</p>
-                    <p class="text-xs text-gray-500">@UiText.T(language, "ViewImmutable")</p>
-                </a>
-            </div>
+<section class="af-panel mt-6">
+    <div class="flex items-center gap-3 mb-5">
+        <i class="fa-solid fa-fingerprint text-2xl text-cyan-400"></i>
+        <div>
+            <p class="af-kicker">@UiText.T(language, "ComplianceControls")</p>
+            <h2 class="text-2xl font-black">@UiText.T(language, "AdminSecurity")</h2>
         </div>
     </div>
-</div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <a asp-controller="Admin" asp-action="SecurityLogs" class="af-card block">
+            <p class="text-lg font-black">@UiText.T(language, "SecurityLogs")</p>
+            <p class="af-muted mt-2">@UiText.T(language, "TrackAccess")</p>
+        </a>
+        <a asp-controller="Admin" asp-action="AuditTrail" class="af-card block">
+            <p class="text-lg font-black">@UiText.T(language, "FinancialAuditTrail")</p>
+            <p class="af-muted mt-2">@UiText.T(language, "ViewImmutable")</p>
+        </a>
+    </div>
+</section>

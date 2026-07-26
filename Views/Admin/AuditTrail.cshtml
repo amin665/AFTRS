@@ -4,32 +4,28 @@
     ViewData["Title"] = UiText.T(language, "FinancialAuditTrail");
 }
 
-<div class="p-6">
-    <h1 class="text-2xl font-bold mb-6 text-blue-800">@UiText.T(language, "FinancialAuditTrail")</h1>
-    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 text-sm">
-        <strong>@UiText.T(language, "Note"):</strong> @UiText.T(language, "AuditTrailNote")
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">@UiText.T(language, "AuditTrail")</p>
+        <h1 class="af-title">@UiText.T(language, "FinancialAuditTrail")</h1>
+        <p class="af-subtitle">@UiText.T(language, "AuditTrailNote")</p>
     </div>
-    <table class="min-w-full bg-white rounded-lg shadow">
-        <thead class="bg-blue-900 text-white">
-            <tr>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "Timestamp")</th>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "User")</th>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "Transaction")</th>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "OldStatus")</th>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "NewStatus")</th>
-                <th class="py-3 px-4 text-left">@UiText.T(language, "Justification")</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y">
+</div>
+
+<div class="af-alert"><strong>@UiText.T(language, "Note"):</strong> @UiText.T(language, "AuditTrailNote")</div>
+<div class="af-table-wrap">
+    <table class="af-table">
+        <thead><tr><th>@UiText.T(language, "Timestamp")</th><th>@UiText.T(language, "User")</th><th>@UiText.T(language, "Transaction")</th><th>@UiText.T(language, "OldStatus")</th><th>@UiText.T(language, "NewStatus")</th><th>@UiText.T(language, "Justification")</th></tr></thead>
+        <tbody>
             @foreach (var entry in Model)
             {
                 <tr>
-                    <td class="py-3 px-4 text-sm text-gray-500">@entry.Timestamp.ToString("g")</td>
-                    <td class="py-3 px-4 font-medium">@entry.User?.Username</td>
-                    <td class="py-3 px-4 text-xs">@UiText.T(language, "UserId"): @entry.TransactionID</td>
-                    <td class="py-3 px-4">@entry.OldStatus</td>
-                    <td class="py-3 px-4">@entry.NewStatus</td>
-                    <td class="py-3 px-4 italic text-gray-600">"@entry.Justification"</td>
+                    <td class="af-muted">@entry.Timestamp.ToString("g")</td>
+                    <td class="font-bold">@entry.User?.Username</td>
+                    <td>@UiText.T(language, "UserId"): @entry.TransactionID</td>
+                    <td>@entry.OldStatus</td>
+                    <td><span class="af-badge af-badge-green">@entry.NewStatus</span></td>
+                    <td class="italic af-muted">"@entry.Justification"</td>
                 </tr>
             }
         </tbody>
