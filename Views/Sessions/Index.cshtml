@@ -1,0 +1,71 @@
+@using AFTRS.Models
+@{
+    var language = UiText.Language(Context.Request);
+    var selected = ViewBag.SelectedSession as ReconciliationSession;
+    var sessions = ViewBag.Sessions as IEnumerable<ReconciliationSession> ?? Enumerable.Empty<ReconciliationSession>();
+    var transactionCounts = ViewBag.TransactionCounts as IDictionary<int, int> ?? new Dictionary<int, int>();
+    var isAdmin = User.HasClaim("role", "Admin");
+    ViewData["Title"] = UiText.T(language, "Sessions");
+}
+
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">AFTRS</p>
+        <h1 class="af-title">@UiText.T(language, "Sessions")</h1>
+        <p class="af-subtitle">@UiText.T(language, "SessionsHelp")</p>
+    </div>
+    @if (selected != null)
+    {
+        <span class="af-badge @(selected.Status == "Active" ? "af-badge-green" : "af-badge-yellow")">@selected.Name - @UiText.T(language, selected.Status == "Active" ? "ActiveSession" : "ArchivedSession")</span>
+    }
+</div>
+
+@if (TempData["Msg"] != null)
+{
+    <div class="af-alert af-alert-success">@TempData["Msg"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="af-alert af-alert-danger">@TempData["Error"]</div>
+}
+
+@if (isAdmin && selected?.Status == "Active")
+{
+    <section class="af-panel af-glow-cyan mb-6">
+        <h2 class="text-2xl font-black">@UiText.T(language, "ArchiveStartNew")</h2>
+        <p class="af-muted mt-2">@UiText.T(language, "ArchiveSessionHelp")</p>
+        <form asp-action="ArchiveAndStart" method="post" class="flex flex-col sm:flex-row gap-3 mt-5">
+            @Html.AntiForgeryToken()
+            <input name="name" maxlength="100" placeholder="@UiText.T(language, "NewSessionName")" />
+            <button type="submit" class="af-btn-primary whitespace-nowrap">@UiText.T(language, "ArchiveStartNew")</button>
+        </form>
+    </section>
+}
+
+<div class="af-table-wrap">
+    <table class="af-table">
+        <thead><tr><th>@UiText.T(language, "SessionName")</th><th>@UiText.T(language, "Status")</th><th>@UiText.T(language, "CreatedAt")</th><th>@UiText.T(language, "ArchivedAt")</th><th>@UiText.T(language, "TotalTransactions")</th><th>@UiText.T(language, "Action")</th></tr></thead>
+        <tbody>
+            @foreach (var session in sessions)
+            {
+                <tr>
+                    <td class="font-black">@session.Name</td>
+                    <td><span class="af-badge @(session.Status == "Active" ? "af-badge-green" : "af-badge-yellow")">@UiText.T(language, session.Status == "Active" ? "ActiveSession" : "ArchivedSession")</span></td>
+                    <td>@session.CreatedAt.ToString("g")</td>
+                    <td class="af-muted">@(session.ArchivedAt?.ToString("g") ?? "-")</td>
+                    <td>@(transactionCounts.TryGetValue(session.SessionID, out var count) ? count : 0)</td>
+                    <td>
+                        @if (selected?.SessionID == session.SessionID)
+                        {
+                            <span class="af-muted">@UiText.T(language, "Selected")</span>
+                        }
+                        else
+                        {
+                            <form asp-action="Select" method="post">@Html.AntiForgeryToken()<input type="hidden" name="sessionId" value="@session.SessionID" /><button type="submit" class="af-btn-secondary">@UiText.T(language, "Open")</button></form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

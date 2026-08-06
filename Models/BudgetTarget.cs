@@ -9,6 +9,9 @@ public class BudgetTarget
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int BudgetID { get; set; }
 
+    public int SessionID { get; set; }
+    public ReconciliationSession? Session { get; set; }
+
     [Required]
     public int CategoryID { get; set; }
 

@@ -19,7 +19,10 @@
         <h1 class="text-3xl font-bold text-gray-800">@UiText.T(language, "StrategicTitle")</h1>
         
         <div class="flex items-center gap-2">
-            <a asp-controller="Reports" asp-action="BudgetPdf" class="text-xs bg-gray-900 text-white px-3 py-2 rounded-lg font-bold hover:bg-black">@UiText.T(language, "ExportBudgetPdf")</a>
+            @if (User.HasPermission(AppPermissions.Reports))
+            {
+                <a asp-controller="Reports" asp-action="BudgetPdf" class="text-xs bg-gray-900 text-white px-3 py-2 rounded-lg font-bold hover:bg-black">@UiText.T(language, "ExportBudgetPdf")</a>
+            }
             <span class="text-xs bg-slate-100 text-slate-700 px-3 py-2 rounded-lg font-bold">@UiText.T(language, "ChartsNote")</span>
         </div>
     </div>

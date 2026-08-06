@@ -11,16 +11,29 @@
     </div>
 </div>
 
+@if (TempData["Msg"] != null)
+{
+    <div class="af-alert mb-6">@TempData["Msg"]</div>
+}
+
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <section class="af-panel af-glow-cyan">
         <h2 class="text-xl font-black mb-4 text-cyan-400">@UiText.T(language, "LedgerDiscrepancies")</h2>
         <div class="space-y-3">
             @foreach (var item in Model.LedgerDiscrepancies)
             {
-                <button type="button" class="af-stat-mini w-full flex justify-between items-center gap-4 text-start" onclick="selectItem('ledger', @item.TransactionID, this)">
-                    <span>@item.Description</span>
-                    <span class="font-black">@item.Amount LYD</span>
-                </button>
+                <div class="af-stat-mini space-y-3">
+                    <button type="button" class="w-full flex justify-between items-center gap-4 text-start" onclick="selectItem('ledger', @item.TransactionID, this)">
+                        <span>@item.Description</span>
+                        <span class="font-black">@item.Amount LYD</span>
+                    </button>
+                    <form asp-action="SaveDiscrepancyComment" method="post" class="flex flex-col sm:flex-row gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="transactionId" value="@item.TransactionID" />
+                        <input name="comment" value="@item.DiscrepancyComment" placeholder="@UiText.T(language, "DiscrepancyComment")" class="flex-1" maxlength="1000" />
+                        <button type="submit" class="af-btn-secondary">@UiText.T(language, "SaveComment")</button>
+                    </form>
+                </div>
             }
         </div>
     </section>
@@ -30,10 +43,18 @@
         <div class="space-y-3">
             @foreach (var item in Model.BankDiscrepancies)
             {
-                <button type="button" class="af-stat-mini w-full flex justify-between items-center gap-4 text-start" onclick="selectItem('bank', @item.TransactionID, this)">
-                    <span>@item.Description</span>
-                    <span class="font-black">@item.Amount LYD</span>
-                </button>
+                <div class="af-stat-mini space-y-3">
+                    <button type="button" class="w-full flex justify-between items-center gap-4 text-start" onclick="selectItem('bank', @item.TransactionID, this)">
+                        <span>@item.Description</span>
+                        <span class="font-black">@item.Amount LYD</span>
+                    </button>
+                    <form asp-action="SaveDiscrepancyComment" method="post" class="flex flex-col sm:flex-row gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="transactionId" value="@item.TransactionID" />
+                        <input name="comment" value="@item.DiscrepancyComment" placeholder="@UiText.T(language, "DiscrepancyComment")" class="flex-1" maxlength="1000" />
+                        <button type="submit" class="af-btn-secondary">@UiText.T(language, "SaveComment")</button>
+                    </form>
+                </div>
             }
         </div>
     </section>

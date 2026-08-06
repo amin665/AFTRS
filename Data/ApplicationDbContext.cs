@@ -18,6 +18,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<FinancialAuditLog> FinancialAuditLogs { get; set; }
     public DbSet<SecurityLog> SecurityLogs { get; set; }
     public DbSet<FileUploadRecord> FileUploadRecords { get; set; }
+    public DbSet<ReconciliationSession> ReconciliationSessions { get; set; }
+    public DbSet<UserPermission> UserPermissions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,6 +53,7 @@ public class ApplicationDbContext : DbContext
             b.Property(x => x.Source).HasMaxLength(20).IsRequired();
             b.Property(x => x.Status).HasMaxLength(20).IsRequired();
             b.Property(x => x.MatchMethod).HasMaxLength(20);
+            b.Property(x => x.DiscrepancyComment).HasMaxLength(1000);
             b.Property(x => x.Amount).HasColumnType("decimal(18,2)");
 
             // Self-referencing match relationship.
@@ -63,6 +66,10 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.CategoryID)
                 .OnDelete(DeleteBehavior.SetNull);
+            b.HasOne(x => x.Session)
+                .WithMany()
+                .HasForeignKey(x => x.SessionID)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<BudgetTarget>(b =>
@@ -74,6 +81,10 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.CategoryID)
                 .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Session)
+                .WithMany()
+                .HasForeignKey(x => x.SessionID)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Template>(b =>
@@ -100,6 +111,10 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.TransactionID)
                 .OnDelete(DeleteBehavior.Restrict);
+            b.HasOne(x => x.Session)
+                .WithMany()
+                .HasForeignKey(x => x.SessionID)
+                .OnDelete(DeleteBehavior.Restrict);
             b.HasOne(x => x.User)
                 .WithMany()
                 .HasForeignKey(x => x.UserID)
@@ -123,6 +138,30 @@ public class ApplicationDbContext : DbContext
             b.ToTable("FileUploadRecords");
             b.HasKey(x => x.FileUploadRecordID);
             b.Property(x => x.Source).HasMaxLength(20).IsRequired();
+            b.HasOne(x => x.Session)
+                .WithMany()
+                .HasForeignKey(x => x.SessionID)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UserPermission>(b =>
+        {
+            b.ToTable("UserPermissions");
+            b.HasKey(x => x.UserPermissionID);
+            b.Property(x => x.Permission).HasMaxLength(50).IsRequired();
+            b.HasIndex(x => new { x.UserID, x.Permission }).IsUnique();
+            b.HasOne(x => x.User)
+                .WithMany(x => x.Permissions)
+                .HasForeignKey(x => x.UserID)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ReconciliationSession>(b =>
+        {
+            b.ToTable("ReconciliationSessions");
+            b.HasKey(x => x.SessionID);
+            b.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            b.Property(x => x.Status).HasMaxLength(20).IsRequired();
         });
     }
 }

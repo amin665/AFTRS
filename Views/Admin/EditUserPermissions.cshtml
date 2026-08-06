@@ -1,0 +1,62 @@
+@model AFTRS.ViewModels.AdminEditUserPermissionsViewModel
+@{
+    var language = UiText.Language(Context.Request);
+    ViewData["Title"] = UiText.T(language, "EditPermissions");
+}
+
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">@Model.Email</p>
+        <h1 class="af-title">@UiText.T(language, "EditPermissions")</h1>
+    </div>
+</div>
+
+<form asp-action="EditUserPermissions" method="post" class="af-panel max-w-3xl space-y-5">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="UserID" />
+    <input type="hidden" asp-for="Email" />
+    <input type="hidden" asp-for="Role" />
+    <input type="hidden" asp-for="IsLocked" />
+
+    <div class="af-stat-mini">
+        <p class="af-kicker">@UiText.T(language, "Role")</p>
+        <p class="font-black mt-1">@(Model.Role == "Admin" ? UiText.T(language, "SystemAdministrator") : UiText.T(language, "FinancialManager"))</p>
+    </div>
+
+    <div class="af-stat-mini">
+        <p class="af-kicker">@UiText.T(language, "AccountStatus")</p>
+        <p class="font-black mt-1 @(Model.IsLocked ? "text-red-500" : "text-green-500")">@(Model.IsLocked ? UiText.T(language, "Locked") : UiText.T(language, "Active"))</p>
+    </div>
+
+    <section class="space-y-3">
+        <p class="af-kicker">@UiText.T(language, "ChangePassword")</p>
+        <p class="af-muted text-sm">@UiText.T(language, "PasswordResetHelp")</p>
+        <input asp-for="NewPassword" placeholder="@UiText.T(language, "NewPassword")" />
+        <input asp-for="ConfirmNewPassword" placeholder="@UiText.T(language, "ConfirmPassword")" />
+    </section>
+
+    @if (Model.Role == "Admin")
+    {
+        <div class="af-alert">@UiText.T(language, "AdminAllPermissions")</div>
+    }
+    else
+    {
+        <section>
+            <p class="af-kicker mb-3">@UiText.T(language, "Permissions")</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                @foreach (var permission in AppPermissions.All)
+                {
+                    <label class="af-stat-mini flex items-center gap-3">
+                        <input type="checkbox" name="Permissions" value="@permission.Key" checked="@(Model.Permissions.Contains(permission.Key))" />
+                        <span>@UiText.T(language, permission.LabelKey)</span>
+                    </label>
+                }
+            </div>
+        </section>
+    }
+
+    <div class="flex justify-end gap-2">
+        <a asp-action="Users" class="af-btn-secondary">@UiText.T(language, "Cancel")</a>
+        <button type="submit" class="af-btn-primary">@UiText.T(language, "Save")</button>
+    </div>
+</form>

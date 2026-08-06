@@ -41,30 +41,54 @@
                     </a>
 
                     <div class="af-nav-section">@UiText.T(uiLanguage, "FinancialOperations")</div>
-                    <a asp-controller="Import" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "DataImport") Data Import Import">
-                        <i class="fa-solid fa-file-import"></i> <span>@UiText.T(uiLanguage, "DataImport")</span>
-                    </a>
-                    <a asp-controller="Reconcile" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "RunEngine") Run Engine Reconciliation">
-                        <i class="fa-solid fa-microchip"></i> <span>@UiText.T(uiLanguage, "RunEngine")</span>
-                    </a>
-                    <a asp-controller="Resolve" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Discrepancies") Discrepancies Resolve Workbench">
-                        <i class="fa-solid fa-screwdriver-wrench"></i> <span>@UiText.T(uiLanguage, "Discrepancies")</span>
-                    </a>
-                    <a asp-controller="Strategic" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Intelligence") Intelligence Strategic">
-                        <i class="fa-solid fa-chart-line"></i> <span>@UiText.T(uiLanguage, "Intelligence")</span>
-                    </a>
-                    <a asp-controller="Templates" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Templates") Templates">
-                        <i class="fa-solid fa-repeat"></i> <span>@UiText.T(uiLanguage, "Templates")</span>
-                    </a>
+                    @if (User.HasPermission(AppPermissions.Import))
+                    {
+                        <a asp-controller="Import" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "DataImport") Data Import Import">
+                            <i class="fa-solid fa-file-import"></i> <span>@UiText.T(uiLanguage, "DataImport")</span>
+                        </a>
+                    }
+                    @if (User.HasPermission(AppPermissions.Reconcile))
+                    {
+                        <a asp-controller="Reconcile" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "RunEngine") Run Engine Reconciliation">
+                            <i class="fa-solid fa-microchip"></i> <span>@UiText.T(uiLanguage, "RunEngine")</span>
+                        </a>
+                    }
+                    @if (User.HasPermission(AppPermissions.ResolveDiscrepancies))
+                    {
+                        <a asp-controller="Resolve" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Discrepancies") Discrepancies Resolve Workbench">
+                            <i class="fa-solid fa-screwdriver-wrench"></i> <span>@UiText.T(uiLanguage, "Discrepancies")</span>
+                        </a>
+                    }
+                    @if (User.HasPermission(AppPermissions.StrategicIntelligence))
+                    {
+                        <a asp-controller="Strategic" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Intelligence") Intelligence Strategic">
+                            <i class="fa-solid fa-chart-line"></i> <span>@UiText.T(uiLanguage, "Intelligence")</span>
+                        </a>
+                    }
+                    @if (User.HasPermission(AppPermissions.Templates))
+                    {
+                        <a asp-controller="Templates" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Templates") Templates">
+                            <i class="fa-solid fa-repeat"></i> <span>@UiText.T(uiLanguage, "Templates")</span>
+                        </a>
+                    }
                     <a asp-controller="Help" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "HelpCsvGuide") Help CSV Guide">
                         <i class="fa-solid fa-circle-question"></i> <span>@UiText.T(uiLanguage, "HelpCsvGuide")</span>
                     </a>
+                    @if (User.HasPermission(AppPermissions.Sessions))
+                    {
+                        <a asp-controller="Sessions" asp-action="Index" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "Sessions") Sessions Archive">
+                            <i class="fa-solid fa-box-archive"></i> <span>@UiText.T(uiLanguage, "Sessions")</span>
+                        </a>
+                    }
 
                     @if (User?.HasClaim("role", "Admin") == true)
                     {
                         <div class="af-nav-section">@UiText.T(uiLanguage, "AdminSecurity")</div>
                         <a asp-controller="Admin" asp-action="SecurityLogs" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "SecurityLogs") Security Logs">
                             <i class="fa-solid fa-shield-halved"></i> <span>@UiText.T(uiLanguage, "SecurityLogs")</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="Users" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "UserManagement") Users Accounts Permissions">
+                            <i class="fa-solid fa-users-gear"></i> <span>@UiText.T(uiLanguage, "UserManagement")</span>
                         </a>
                         <a asp-controller="Admin" asp-action="AuditTrail" class="af-nav-link" data-interface-name="@UiText.T(uiLanguage, "AuditTrail") Audit Trail Financial Audit">
                             <i class="fa-solid fa-list-check"></i> <span>@UiText.T(uiLanguage, "AuditTrail")</span>

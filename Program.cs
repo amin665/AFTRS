@@ -35,6 +35,8 @@ builder.Services.AddScoped<ImportService>();
 builder.Services.AddScoped<MatchingEngineService>();
 builder.Services.AddScoped<HeuristicsEngineService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ReconciliationSessionContext>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

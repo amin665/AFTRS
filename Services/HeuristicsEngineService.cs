@@ -14,7 +14,7 @@ public class HeuristicsEngineService
         _tolerance = Math.Abs(config.GetValue<decimal>("AppSettings:ToleranceThreshold"));
     }
 
-    public async Task<int> ApplyKeywordCategoriesAsync()
+    public async Task<int> ApplyKeywordCategoriesAsync(int sessionId)
     {
         // Uses Category.KeywordRule as the dictionary.
         var categories = await _context.Categories
@@ -22,7 +22,7 @@ public class HeuristicsEngineService
             .ToListAsync();
 
         var txs = await _context.Transactions
-            .Where(t => t.CategoryID == null)
+            .Where(t => t.SessionID == sessionId && t.CategoryID == null)
             .ToListAsync();
 
         int updated = 0;

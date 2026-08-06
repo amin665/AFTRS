@@ -5,6 +5,10 @@
     var reconciledCount = ViewBag.ReconciledCount ?? 0;
     var discrepancyCount = ViewBag.DiscrepancyCount ?? 0;
     var matchPercent = ViewBag.MatchPercent ?? 0;
+    var canImport = User.HasPermission(AppPermissions.Import);
+    var canReconcile = User.HasPermission(AppPermissions.Reconcile);
+    var canResolve = User.HasPermission(AppPermissions.ResolveDiscrepancies);
+    var canUseIntelligence = User.HasPermission(AppPermissions.StrategicIntelligence);
     ViewData["HideFooter"] = true;
 }
 
@@ -20,7 +24,7 @@
 </div>
 
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-    <section class="af-panel af-glow-cyan xl:col-span-2">
+    <section class="af-panel af-glow-cyan @(canResolve ? "xl:col-span-2" : "xl:col-span-3")">
         <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
                 <p class="af-kicker">@UiText.T(language, "SystemProgress")</p>
@@ -44,50 +48,71 @@
         </div>
     </section>
 
-    <section class="af-panel af-glow-magenta">
-        <p class="af-kicker">@UiText.T(language, "PendingDiscrepancies")</p>
-        <p class="af-value text-red-500">@discrepancyCount</p>
-        <p class="af-muted mb-6">@UiText.T(language, "RequiresManualResolution")</p>
-        <a asp-controller="Resolve" asp-action="Index" class="af-btn-primary w-full">
-            <i class="fa-solid fa-screwdriver-wrench"></i> @UiText.T(language, "OpenWorkbench")
-        </a>
-    </section>
+    @if (canResolve)
+    {
+        <section class="af-panel af-glow-magenta">
+            <p class="af-kicker">@UiText.T(language, "PendingDiscrepancies")</p>
+            <p class="af-value text-red-500">@discrepancyCount</p>
+            <p class="af-muted mb-6">@UiText.T(language, "RequiresManualResolution")</p>
+            <a asp-controller="Resolve" asp-action="Index" class="af-btn-primary w-full">
+                <i class="fa-solid fa-screwdriver-wrench"></i> @UiText.T(language, "OpenWorkbench")
+            </a>
+        </section>
+    }
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-    <section class="af-card">
-        <div class="flex items-center justify-between gap-4">
-            <div>
-                <p class="af-kicker">@UiText.T(language, "DataImport")</p>
-                <h3 class="text-xl font-black mt-2">CSV / XLSX</h3>
-            </div>
-            <i class="fa-solid fa-file-import text-3xl text-cyan-400"></i>
-        </div>
-        <p class="af-muted mt-4">@UiText.T(language, "UploadLedger") / @UiText.T(language, "UploadBankStatement") . SHA-256.</p>
-        <a asp-controller="Import" asp-action="Index" class="af-btn-secondary w-full mt-6">@UiText.T(language, "OpenImport")</a>
-    </section>
+@if (canImport || canReconcile || canUseIntelligence)
+{
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        @if (canImport)
+        {
+            <section class="af-card">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="af-kicker">@UiText.T(language, "DataImport")</p>
+                        <h3 class="text-xl font-black mt-2">CSV / XLSX</h3>
+                    </div>
+                    <i class="fa-solid fa-file-import text-3xl text-cyan-400"></i>
+                </div>
+                <p class="af-muted mt-4">@UiText.T(language, "UploadLedger") / @UiText.T(language, "UploadBankStatement") . SHA-256.</p>
+                <a asp-controller="Import" asp-action="Index" class="af-btn-secondary w-full mt-6">@UiText.T(language, "OpenImport")</a>
+            </section>
+        }
 
-    <section class="af-card">
-        <div class="flex items-center justify-between gap-4">
-            <div>
-                <p class="af-kicker">@UiText.T(language, "RunEngine")</p>
-                <h3 class="text-xl font-black mt-2">@UiText.T(language, "RunReconciliation")</h3>
-            </div>
-            <i class="fa-solid fa-microchip text-3xl text-purple-400"></i>
-        </div>
-        <p class="af-muted mt-4">@UiText.T(language, "AutoReconciled") / @UiText.T(language, "ManualReconciled") / @UiText.T(language, "Discrepancy")</p>
-        <a asp-controller="Reconcile" asp-action="Index" class="af-btn-secondary w-full mt-6">@UiText.T(language, "RunReconciliation")</a>
-    </section>
+        @if (canReconcile)
+        {
+            <section class="af-card">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="af-kicker">@UiText.T(language, "RunEngine")</p>
+                        <h3 class="text-xl font-black mt-2">@UiText.T(language, "RunReconciliation")</h3>
+                    </div>
+                    <i class="fa-solid fa-microchip text-3xl text-purple-400"></i>
+                </div>
+                <p class="af-muted mt-4">@UiText.T(language, "AutoReconciled") / @UiText.T(language, "ManualReconciled") / @UiText.T(language, "Discrepancy")</p>
+                <a asp-controller="Reconcile" asp-action="Index" class="af-btn-secondary w-full mt-6">@UiText.T(language, "RunReconciliation")</a>
+            </section>
+        }
 
-    <section class="af-card">
-        <div class="flex items-center justify-between gap-4">
-            <div>
-                <p class="af-kicker">@UiText.T(language, "Intelligence")</p>
-                <h3 class="text-xl font-black mt-2">@UiText.T(language, "ViewIntelligence")</h3>
-            </div>
-            <i class="fa-solid fa-chart-line text-3xl text-green-400"></i>
-        </div>
-        <p class="af-muted mt-4">@UiText.T(language, "BudgetActualTitle")</p>
-        <a asp-controller="Strategic" asp-action="Index" class="af-btn-secondary w-full mt-6">@UiText.T(language, "ViewIntelligence")</a>
+        @if (canUseIntelligence)
+        {
+            <section class="af-card">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="af-kicker">@UiText.T(language, "Intelligence")</p>
+                        <h3 class="text-xl font-black mt-2">@UiText.T(language, "ViewIntelligence")</h3>
+                    </div>
+                    <i class="fa-solid fa-chart-line text-3xl text-green-400"></i>
+                </div>
+                <p class="af-muted mt-4">@UiText.T(language, "BudgetActualTitle")</p>
+                <a asp-controller="Strategic" asp-action="Index" class="af-btn-secondary w-full mt-6">@UiText.T(language, "ViewIntelligence")</a>
+            </section>
+        }
+    </div>
+}
+else
+{
+    <section class="af-panel mt-6">
+        <p class="af-muted">@UiText.T(language, "NoDashboardActions")</p>
     </section>
-</div>
+}

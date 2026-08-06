@@ -22,4 +22,6 @@ public class User
     public string Role { get; set; } = "Manager"; // Manager / Admin
 
     public bool IsLocked { get; set; }
+
+    public List<UserPermission> Permissions { get; set; } = new();
 }

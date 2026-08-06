@@ -1,19 +1,23 @@
 using AFTRS.Data;
 using AFTRS.Infrastructure;
 using AFTRS.Models;
+using AFTRS.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AFTRS.Controllers;
 
 [RoleAuthorize("Manager", "Admin")]
+[PermissionAuthorize(AppPermissions.Templates)]
 public class TemplatesController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly ReconciliationSessionContext _sessions;
 
-    public TemplatesController(ApplicationDbContext context)
+    public TemplatesController(ApplicationDbContext context, ReconciliationSessionContext sessions)
     {
         _context = context;
+        _sessions = sessions;
     }
 
     [HttpGet]
@@ -27,7 +31,8 @@ public class TemplatesController : Controller
     [HttpGet]
     public async Task<IActionResult> CreateFromTransaction(int transactionId)
     {
-        var tx = await _context.Transactions.Include(t => t.Category).FirstOrDefaultAsync(t => t.TransactionID == transactionId);
+        var session = await _sessions.GetSelectedAsync();
+        var tx = await _context.Transactions.Include(t => t.Category).FirstOrDefaultAsync(t => t.SessionID == session.SessionID && t.TransactionID == transactionId);
         if (tx == null) return NotFound();
 
         ViewBag.Categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
@@ -55,6 +60,13 @@ public class TemplatesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Template model)
     {
+        var session = await _sessions.GetSelectedAsync();
+        if (session.Status != "Active")
+        {
+            TempData["Msg"] = UiText.T(Request, "ArchivedSessionReadOnly");
+            return RedirectToAction(nameof(Index));
+        }
+
         if (model.CategoryID <= 0)
             ModelState.AddModelError("CategoryID", UiText.T(Request, "CategoryRequired"));
 

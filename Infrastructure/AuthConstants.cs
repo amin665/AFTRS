@@ -6,4 +6,5 @@ public static class AuthConstants
 
     public const string RoleClaimType = "role";
     public const string UserIdClaimType = "uid";
+    public const string PermissionClaimType = "permission";
 }

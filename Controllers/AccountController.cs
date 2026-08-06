@@ -123,12 +123,21 @@ public class AccountController : Controller
     }
 
     [HttpGet]
-    public IActionResult Register() => View();
+    public async Task<IActionResult> Register()
+    {
+        if (await _context.Users.AnyAsync(u => u.Role == "Admin"))
+            return RedirectToAction(nameof(Login));
+
+        return View();
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
+        if (await _context.Users.AnyAsync(u => u.Role == "Admin"))
+            return Forbid();
+
         if (!ModelState.IsValid) return View(model);
 
         if (!IsPasswordComplexEnough(model.Password))
@@ -148,7 +157,7 @@ public class AccountController : Controller
         {
             Username = model.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password),
-            Role = "Manager",
+            Role = "Admin",
             IsLocked = false
         };
 

@@ -9,6 +9,9 @@ public class FileUploadRecord
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int FileUploadRecordID { get; set; }
 
+    public int SessionID { get; set; }
+    public ReconciliationSession? Session { get; set; }
+
     [Required]
     public string FileName { get; set; } = string.Empty;
 

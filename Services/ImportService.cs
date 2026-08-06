@@ -27,19 +27,20 @@ public class ImportService
     /// <summary>
     /// SRS Validation 1 (Duplicate File): checks SHA-256 hash exists in DB.
     /// </summary>
-    public async Task<string?> CheckFileHashAsync(string fileName, string fileHash)
+    public async Task<string?> CheckFileHashAsync(int sessionId, string fileName, string fileHash)
     {
-        var exists = await _context.FileUploadRecords.AnyAsync(r => r.FileHash == fileHash);
+        var exists = await _context.FileUploadRecords.AnyAsync(r => r.SessionID == sessionId && r.FileHash == fileHash);
         if (exists)
             return $"Duplicate file detected: '{fileName}' (or a file with identical content) has already been uploaded. Upload aborted to prevent data duplication.";
         return null;
     }
 
     /// <summary>Records a file upload entry after successful import.</summary>
-    public void RecordFileUpload(string fileName, string fileHash, string source)
+    public void RecordFileUpload(int sessionId, string fileName, string fileHash, string source)
     {
         _context.FileUploadRecords.Add(new FileUploadRecord
         {
+            SessionID = sessionId,
             FileName = fileName,
             FileHash = fileHash,
             Source = source,
@@ -48,22 +49,23 @@ public class ImportService
     }
 
     /// <summary>
-    /// SRS Validation 2 (Duplicate Row): skip any row where Date + Ref + Amount matches an existing record.
+    /// SRS Validation 2 (Duplicate Row): skip any row where Source + Date + Ref + Amount matches an existing record.
     /// </summary>
-    private async Task<List<Transaction>> FilterDuplicateRowsAsync(List<Transaction> newTransactions)
+    private async Task<List<Transaction>> FilterDuplicateRowsAsync(int sessionId, List<Transaction> newTransactions)
     {
         var existing = await _context.Transactions
-            .Select(t => new { t.ReferenceNumber, t.TransactionDate, t.Amount })
+            .Where(t => t.SessionID == sessionId)
+            .Select(t => new { t.Source, t.ReferenceNumber, t.TransactionDate, t.Amount })
             .ToListAsync();
 
         var existingSet = existing
-            .Select(e => $"{e.ReferenceNumber}|{e.TransactionDate:yyyy-MM-dd}|{e.Amount}")
+            .Select(e => $"{e.Source}|{e.ReferenceNumber}|{e.TransactionDate:yyyy-MM-dd}|{e.Amount}")
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         return newTransactions
             .Where(t =>
             {
-                var key = $"{t.ReferenceNumber}|{t.TransactionDate:yyyy-MM-dd}|{t.Amount}";
+                var key = $"{t.Source}|{t.ReferenceNumber}|{t.TransactionDate:yyyy-MM-dd}|{t.Amount}";
                 return !existingSet.Contains(key);
             })
             .ToList();
@@ -133,7 +135,7 @@ public class ImportService
         return null;
     }
 
-    public async Task<(List<Transaction> Data, string? Error)> ParseCsvWithValidation(Stream fileStream, string source)
+    public async Task<(List<Transaction> Data, string? Error)> ParseCsvWithValidation(Stream fileStream, string source, int sessionId)
     {
         using var reader = new StreamReader(fileStream);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
@@ -156,6 +158,7 @@ public class ImportService
 
                 var t = new Transaction
                 {
+                    SessionID = sessionId,
                     TransactionDate = date,
                     Description = desc!,
                     ReferenceNumber = refNum,
@@ -171,7 +174,7 @@ public class ImportService
                     ledgerForBalance.Add((t.Amount, type));
             }
 
-            var filtered = await FilterDuplicateRowsAsync(records);
+            var filtered = await FilterDuplicateRowsAsync(sessionId, records);
             var warning = source == "Ledger" ? ValidateLedgerBalance(ledgerForBalance) : null;
             return (filtered, warning);
         }
@@ -181,7 +184,7 @@ public class ImportService
         }
     }
 
-    public async Task<(List<Transaction> Data, string? Error)> ParseExcelWithValidation(Stream fileStream, string source)
+    public async Task<(List<Transaction> Data, string? Error)> ParseExcelWithValidation(Stream fileStream, string source, int sessionId)
     {
         try
         {
@@ -201,6 +204,7 @@ public class ImportService
 
                 var t = new Transaction
                 {
+                    SessionID = sessionId,
                     TransactionDate = date,
                     Description = desc!,
                     ReferenceNumber = refNum,
@@ -216,7 +220,7 @@ public class ImportService
                     ledgerForBalance.Add((t.Amount, type));
             }
 
-            var filtered = await FilterDuplicateRowsAsync(records);
+            var filtered = await FilterDuplicateRowsAsync(sessionId, records);
             var warning = source == "Ledger" ? ValidateLedgerBalance(ledgerForBalance) : null;
             return (filtered, warning);
         }

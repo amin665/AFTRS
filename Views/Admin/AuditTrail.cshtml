@@ -22,7 +22,7 @@
                 <tr>
                     <td class="af-muted">@entry.Timestamp.ToString("g")</td>
                     <td class="font-bold">@entry.User?.Username</td>
-                    <td>@UiText.T(language, "UserId"): @entry.TransactionID</td>
+                    <td>@UiText.T(language, "Transaction") #@entry.TransactionID</td>
                     <td>@entry.OldStatus</td>
                     <td><span class="af-badge af-badge-green">@entry.NewStatus</span></td>
                     <td class="italic af-muted">"@entry.Justification"</td>

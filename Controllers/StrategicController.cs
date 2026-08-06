@@ -1,37 +1,43 @@
 using AFTRS.Data;
 using AFTRS.Infrastructure;
 using AFTRS.Models;
+using AFTRS.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AFTRS.Controllers;
 
 [RoleAuthorize("Manager", "Admin")]
+[PermissionAuthorize(AppPermissions.StrategicIntelligence)]
 public class StrategicController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly ReconciliationSessionContext _sessions;
 
-    public StrategicController(ApplicationDbContext context)
+    public StrategicController(ApplicationDbContext context, ReconciliationSessionContext sessions)
     {
         _context = context;
+        _sessions = sessions;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index()
     {
+        var session = await _sessions.GetSelectedAsync();
+        ViewBag.Session = session;
         ViewBag.Categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
 
         var now = DateTime.Today;
         var budgets = await _context.BudgetTargets
             .Include(b => b.Category)
-            .Where(b => b.TargetMonth == now.Month && b.TargetYear == now.Year)
+            .Where(b => b.SessionID == session.SessionID && b.TargetMonth == now.Month && b.TargetYear == now.Year)
             .ToListAsync();
 
         // Actual spending: ledger totals per category for current month.
         var monthStart = new DateTime(now.Year, now.Month, 1);
         var monthEnd = monthStart.AddMonths(1);
         var actuals = await _context.Transactions
-            .Where(t => t.Source == "Ledger" && t.CategoryID != null && t.TransactionDate >= monthStart && t.TransactionDate < monthEnd)
+            .Where(t => t.SessionID == session.SessionID && t.Source == "Ledger" && t.CategoryID != null && t.TransactionDate >= monthStart && t.TransactionDate < monthEnd)
             .GroupBy(t => t.CategoryID)
             .Select(g => new { CategoryID = g.Key!.Value, Total = g.Sum(x => x.Amount) })
             .ToDictionaryAsync(x => x.CategoryID, x => x.Total);
@@ -44,16 +50,19 @@ public class StrategicController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SetBudget(int categoryId, int targetMonth, int targetYear, decimal targetAmount)
     {
+        var session = await _sessions.GetSelectedAsync();
+        if (session.Status != "Active") return BadRequest(UiText.T(Request, "ArchivedSessionReadOnly"));
         if (targetMonth < 1 || targetMonth > 12) return BadRequest(UiText.T(Request, "InvalidMonth"));
         if (targetYear < 2000 || targetYear > 2100) return BadRequest(UiText.T(Request, "InvalidYear"));
 
         var existing = await _context.BudgetTargets
-            .FirstOrDefaultAsync(b => b.CategoryID == categoryId && b.TargetMonth == targetMonth && b.TargetYear == targetYear);
+            .FirstOrDefaultAsync(b => b.SessionID == session.SessionID && b.CategoryID == categoryId && b.TargetMonth == targetMonth && b.TargetYear == targetYear);
 
         if (existing == null)
         {
             _context.BudgetTargets.Add(new Models.BudgetTarget
             {
+                SessionID = session.SessionID,
                 CategoryID = categoryId,
                 TargetMonth = targetMonth,
                 TargetYear = targetYear,
@@ -75,6 +84,13 @@ public class StrategicController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddCategory(string name, string keywordRule)
     {
+        var session = await _sessions.GetSelectedAsync();
+        if (session.Status != "Active")
+        {
+            TempData["Error"] = UiText.T(Request, "ArchivedSessionReadOnly");
+            return RedirectToAction(nameof(Index));
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             TempData["Error"] = UiText.T(Request, "CategoryNameRequired");
@@ -104,12 +120,13 @@ public class StrategicController : Controller
     [HttpGet]
     public async Task<IActionResult> GetCashFlowData(int projectionMonths = 3)
     {
+        var session = await _sessions.GetSelectedAsync();
         var today = DateTime.Today;
         if (projectionMonths < 1 || projectionMonths > 12) projectionMonths = 3;
 
         var start = today.AddMonths(-6);
         var tx = await _context.Transactions
-            .Where(t => t.Source == "Ledger" && t.TransactionDate >= start)
+            .Where(t => t.SessionID == session.SessionID && t.Source == "Ledger" && t.TransactionDate >= start)
             .OrderBy(t => t.TransactionDate)
             .ToListAsync();
 

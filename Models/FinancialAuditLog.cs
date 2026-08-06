@@ -9,6 +9,9 @@ public class FinancialAuditLog
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int AuditID { get; set; }
 
+    public int SessionID { get; set; }
+    public ReconciliationSession? Session { get; set; }
+
     [Required]
     public int TransactionID { get; set; }
 

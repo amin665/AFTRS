@@ -9,6 +9,9 @@ public class Transaction
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int TransactionID { get; set; }
 
+    public int SessionID { get; set; }
+    public ReconciliationSession? Session { get; set; }
+
     public int? CategoryID { get; set; }
     public Category? Category { get; set; }
 
@@ -40,4 +43,7 @@ public class Transaction
     // Used for UI color-coding per SRS: Auto (green) vs Manual (yellow) when Reconciled.
     [MaxLength(20)]
     public string? MatchMethod { get; set; } // Auto / Manual
+
+    [MaxLength(1000)]
+    public string? DiscrepancyComment { get; set; }
 }

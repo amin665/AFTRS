@@ -46,27 +46,32 @@ public class MatchingEngineService
         return 1m - ((decimal)distance / maxLen);
     }
 
-    public async Task<int> RunReconciliationAsync()
+    public async Task<int> RunReconciliationAsync(int sessionId)
     {
         // Memory constraint from SRS: process in batches of 1,000 ledger rows.
         const int batchSize = 1000;
 
         // Keep bank discrepancies in-memory so we can mark and remove matches deterministically.
         var bank = await _context.Transactions
-            .Where(t => t.Source == "Bank" && t.Status == "Discrepancy")
+            .Where(t => t.SessionID == sessionId && t.Source == "Bank" && t.Status == "Discrepancy")
+            .ToListAsync();
+
+        // Snapshot IDs before matching. Unmatched rows intentionally remain discrepancies,
+        // so querying discrepancies inside a while loop would process them forever.
+        var ledgerIds = await _context.Transactions
+            .Where(t => t.SessionID == sessionId && t.Source == "Ledger" && t.Status == "Discrepancy")
+            .OrderBy(t => t.TransactionID)
+            .Select(t => t.TransactionID)
             .ToListAsync();
 
         int matched = 0;
 
-        while (true)
+        for (var offset = 0; offset < ledgerIds.Count; offset += batchSize)
         {
             var ledgerBatch = await _context.Transactions
-                .Where(t => t.Source == "Ledger" && t.Status == "Discrepancy")
+                .Where(t => t.SessionID == sessionId && ledgerIds.Skip(offset).Take(batchSize).Contains(t.TransactionID))
                 .OrderBy(t => t.TransactionID)
-                .Take(batchSize)
                 .ToListAsync();
-
-            if (ledgerBatch.Count == 0) break;
 
             foreach (var l in ledgerBatch)
             {

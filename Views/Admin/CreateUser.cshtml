@@ -1,0 +1,55 @@
+@model AFTRS.ViewModels.AdminCreateUserViewModel
+@{
+    var language = UiText.Language(Context.Request);
+    ViewData["Title"] = UiText.T(language, "CreateUser");
+}
+
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">@UiText.T(language, "UserManagement")</p>
+        <h1 class="af-title">@UiText.T(language, "CreateUser")</h1>
+    </div>
+</div>
+
+<form asp-action="CreateUser" method="post" class="af-panel max-w-3xl space-y-5">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-red-500 text-sm"></div>
+
+    <input asp-for="Email" placeholder="@UiText.T(language, "EmailAddress")" />
+    <input asp-for="Password" placeholder="@UiText.T(language, "Password")" />
+    <input asp-for="ConfirmPassword" placeholder="@UiText.T(language, "ConfirmPassword")" />
+
+    <div>
+        <label class="af-kicker block mb-2">@UiText.T(language, "Role")</label>
+        <select asp-for="Role" id="roleSelect">
+            <option value="Manager">@UiText.T(language, "FinancialManager")</option>
+            <option value="Admin">@UiText.T(language, "SystemAdministrator")</option>
+        </select>
+    </div>
+
+    <section id="permissionsPanel">
+        <p class="af-kicker mb-3">@UiText.T(language, "Permissions")</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            @foreach (var permission in AppPermissions.All)
+            {
+                <label class="af-stat-mini flex items-center gap-3">
+                    <input type="checkbox" name="Permissions" value="@permission.Key" checked="@(Model.Permissions.Contains(permission.Key))" />
+                    <span>@UiText.T(language, permission.LabelKey)</span>
+                </label>
+            }
+        </div>
+    </section>
+
+    <div class="flex justify-end gap-2">
+        <a asp-action="Users" class="af-btn-secondary">@UiText.T(language, "Cancel")</a>
+        <button type="submit" class="af-btn-primary">@UiText.T(language, "Save")</button>
+    </div>
+</form>
+
+<script>
+    const roleSelect = document.getElementById('roleSelect');
+    const permissionsPanel = document.getElementById('permissionsPanel');
+    function syncPermissionsPanel() { permissionsPanel.classList.toggle('hidden', roleSelect.value === 'Admin'); }
+    roleSelect.addEventListener('change', syncPermissionsPanel);
+    syncPermissionsPanel();
+</script>

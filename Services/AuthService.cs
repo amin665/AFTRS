@@ -18,7 +18,7 @@ public class AuthService
 
     public async Task<(User? User, bool IsLocked)> ValidateCredentialsAsync(string username, string password)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        var user = await _context.Users.Include(u => u.Permissions).FirstOrDefaultAsync(u => u.Username == username);
         if (user == null) return (null, false);
         if (user.IsLocked) return (null, true);
 
@@ -36,6 +36,9 @@ public class AuthService
             new(AuthConstants.UserIdClaimType, user.UserID.ToString()),
             new(AuthConstants.RoleClaimType, user.Role)
         };
+
+        foreach (var permission in user.Permissions.Select(p => p.Permission).Distinct(StringComparer.OrdinalIgnoreCase))
+            claims.Add(new Claim(AuthConstants.PermissionClaimType, permission));
 
         var identity = new ClaimsIdentity(claims, AuthConstants.Scheme);
         return new ClaimsPrincipal(identity);

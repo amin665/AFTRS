@@ -8,10 +8,12 @@ using Microsoft.EntityFrameworkCore;
 namespace AFTRS.Controllers;
 
 [RoleAuthorize("Manager", "Admin")]
+[PermissionAuthorize(AppPermissions.Import)]
 public class ImportController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly ImportService _import;
+    private readonly ReconciliationSessionContext _sessions;
 
     private const long MaxFileSizeBytes = 25L * 1024L * 1024L;
 
@@ -32,16 +34,20 @@ public class ImportController : Controller
         });
     }
 
-    public ImportController(ApplicationDbContext context, ImportService import)
+    public ImportController(ApplicationDbContext context, ImportService import, ReconciliationSessionContext sessions)
     {
         _context = context;
         _import = import;
+        _sessions = sessions;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index()
     {
+        var session = await _sessions.GetSelectedAsync();
+        ViewBag.Session = session;
         ViewBag.UploadHistory = await _context.FileUploadRecords
+            .Where(r => r.SessionID == session.SessionID)
             .OrderByDescending(r => r.UploadedAt)
             .Take(25)
             .ToListAsync();
@@ -52,11 +58,19 @@ public class ImportController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Upload(IFormFile file, string sourceType)
     {
+        var session = await _sessions.GetSelectedAsync();
+        if (session.Status != "Active")
+        {
+            TempData["Error"] = UiText.T(Request, "ArchivedSessionReadOnly");
+            return RedirectToAction(nameof(Index));
+        }
+
         if (file == null || file.Length == 0)
         {
             LogUploadAttempt(false, sourceType);
             await _context.SaveChangesAsync();
-            return BadRequest(UiText.T(Request, "NoFileUploaded"));
+            TempData["Error"] = UiText.T(Request, "NoFileUploaded");
+            return RedirectToAction(nameof(Index));
         }
 
         if (file.Length > MaxFileSizeBytes)
@@ -83,7 +97,7 @@ public class ImportController : Controller
         }
 
         var hash = ImportService.ComputeSha256(bytes);
-        var hashError = await _import.CheckFileHashAsync(file.FileName, hash);
+        var hashError = await _import.CheckFileHashAsync(session.SessionID, file.FileName, hash);
         if (hashError != null)
         {
             LogUploadAttempt(false, sourceType);
@@ -97,9 +111,9 @@ public class ImportController : Controller
         using var stream = new MemoryStream(bytes);
 
         if (ext == ".csv")
-            result = await _import.ParseCsvWithValidation(stream, sourceType);
+            result = await _import.ParseCsvWithValidation(stream, sourceType, session.SessionID);
         else if (ext == ".xlsx")
-            result = await _import.ParseExcelWithValidation(stream, sourceType);
+            result = await _import.ParseExcelWithValidation(stream, sourceType, session.SessionID);
         else
         {
             LogUploadAttempt(false, sourceType);
@@ -133,7 +147,7 @@ public class ImportController : Controller
         }
 
         _context.Transactions.AddRange(result.Data);
-        _import.RecordFileUpload(file.FileName, hash, sourceType);
+        _import.RecordFileUpload(session.SessionID, file.FileName, hash, sourceType);
 
         // Security log for upload attempt (FR-04 style outcome logging extended to uploads).
         LogUploadAttempt(true, sourceType);

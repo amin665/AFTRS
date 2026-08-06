@@ -1,5 +1,6 @@
 using AFTRS.Data;
 using AFTRS.Infrastructure;
+using AFTRS.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +9,12 @@ namespace AFTRS.Controllers;
 public class HomeController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly ReconciliationSessionContext _sessions;
 
-    public HomeController(ApplicationDbContext context)
+    public HomeController(ApplicationDbContext context, ReconciliationSessionContext sessions)
     {
         _context = context;
+        _sessions = sessions;
     }
 
     [HttpGet]
@@ -44,7 +47,9 @@ public class HomeController : Controller
     [HttpGet]
     public async Task<IActionResult> ManagerDashboard()
     {
-        var all = await _context.Transactions.ToListAsync();
+        var session = await _sessions.GetSelectedAsync();
+        ViewBag.Session = session;
+        var all = await _context.Transactions.Where(t => t.SessionID == session.SessionID).ToListAsync();
 
         ViewBag.TotalCount = all.Count;
         ViewBag.ReconciledCount = all.Count(t => t.Status == "Reconciled");

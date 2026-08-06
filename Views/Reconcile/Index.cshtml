@@ -2,6 +2,9 @@
 @{
     var language = UiText.Language(Context.Request);
     ViewData["Title"] = UiText.T(language, "ReconciliationDashboard");
+    var autoReconciledCount = ViewBag.AutoReconciledCount ?? 0;
+    var manualReconciledCount = ViewBag.ManualReconciledCount ?? 0;
+    var discrepancyCount = ViewBag.DiscrepancyCount ?? 0;
 }
 
 <div class="af-page-header">
@@ -10,8 +13,11 @@
         <h1 class="af-title">@UiText.T(language, "ReconciliationDashboard")</h1>
     </div>
     <div class="flex flex-wrap gap-2">
-        <a asp-controller="Reports" asp-action="ReconciliationPdf" class="af-btn-secondary">@UiText.T(language, "ExportPdf")</a>
-        <a asp-controller="Reports" asp-action="ReconciliationExcel" class="af-btn-secondary">@UiText.T(language, "ExportExcel")</a>
+        @if (User.HasPermission(AppPermissions.Reports))
+        {
+            <a asp-controller="Reports" asp-action="ReconciliationPdf" class="af-btn-secondary">@UiText.T(language, "ExportPdf")</a>
+            <a asp-controller="Reports" asp-action="ReconciliationExcel" class="af-btn-secondary">@UiText.T(language, "ExportExcel")</a>
+        }
         <form asp-action="CategorizeOnly" method="post">@Html.AntiForgeryToken()<button type="submit" class="af-btn-secondary">@UiText.T(language, "Categorize")</button></form>
         <form asp-action="RunEngine" method="post" id="engineForm">@Html.AntiForgeryToken()<button type="submit" id="runBtn" class="af-btn-primary"><span id="btnText">@UiText.T(language, "RunReconciliationEngine")</span><span id="spinner" class="hidden animate-spin"><i class="fa-solid fa-circle-notch"></i></span></button></form>
     </div>
@@ -21,6 +27,21 @@
 {
     <div class="af-alert">@TempData["Msg"]</div>
 }
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <section class="af-card">
+        <p class="af-kicker">@UiText.T(language, "AutoReconciled")</p>
+        <p class="text-3xl font-black mt-2 text-green-500">@autoReconciledCount</p>
+    </section>
+    <section class="af-card">
+        <p class="af-kicker">@UiText.T(language, "ManualReconciled")</p>
+        <p class="text-3xl font-black mt-2 text-yellow-500">@manualReconciledCount</p>
+    </section>
+    <section class="af-card">
+        <p class="af-kicker">@UiText.T(language, "Discrepancy")</p>
+        <p class="text-3xl font-black mt-2 text-red-500">@discrepancyCount</p>
+    </section>
+</div>
 
 <div class="flex flex-wrap gap-3 mb-4">
     <span class="af-badge af-badge-green">@UiText.T(language, "AutoReconciled")</span>
@@ -38,19 +59,34 @@
                 <th>@UiText.T(language, "Source")</th>
                 <th>@UiText.T(language, "Category")</th>
                 <th>@UiText.T(language, "Status")</th>
+                <th>@UiText.T(language, "MatchedWith")</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in Model)
             {
-                var statusClass = item.Status == "Reconciled" ? (item.MatchMethod == "Manual" ? "af-badge-yellow" : "af-badge-green") : "af-badge-red";
+                var isReconciled = item.Status == "Reconciled";
+                var isManual = item.MatchMethod == "Manual";
+                var statusClass = isReconciled ? (isManual ? "af-badge-yellow" : "af-badge-green") : "af-badge-red";
+                var statusText = isReconciled ? (isManual ? UiText.T(language, "ManualReconciled") : UiText.T(language, "AutoReconciled")) : UiText.T(language, "Discrepancy");
                 <tr>
                     <td>@item.TransactionDate.ToString("dd/MM/yyyy")</td>
                     <td>@item.Description</td>
                     <td class="font-black">@item.Amount.ToString("N2") LYD</td>
                     <td><span class="af-badge @(item.Source == "Bank" ? "af-badge-purple" : "af-badge-cyan")">@item.Source</span></td>
-                    <td class="af-muted">@(item.Category?.Name ?? "-")</td>
-                    <td><span class="af-badge @statusClass">@item.Status</span></td>
+                    <td class="af-muted">@(item.Category?.Name ?? UiText.T(language, "Uncategorized"))</td>
+                    <td><span class="af-badge @statusClass">@statusText</span></td>
+                    <td class="text-sm">
+                        @if (item.MatchedTransaction != null)
+                        {
+                            <span class="font-bold">#@item.MatchedTransaction.TransactionID</span>
+                            <span class="af-muted">@item.MatchedTransaction.Source - @item.MatchedTransaction.ReferenceNumber</span>
+                        }
+                        else
+                        {
+                            <span class="af-muted">-</span>
+                        }
+                    </td>
                 </tr>
             }
         </tbody>

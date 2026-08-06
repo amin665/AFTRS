@@ -129,8 +129,12 @@ a { color: inherit; }
 .af-sidebar-nav {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: thin;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.af-sidebar-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .af-sidebar-bottom {

@@ -1,0 +1,76 @@
+@model AFTRS.ViewModels.AdminUsersViewModel
+@{
+    var language = UiText.Language(Context.Request);
+    ViewData["Title"] = UiText.T(language, "UserManagement");
+}
+
+<div class="af-page-header">
+    <div>
+        <p class="af-kicker">@UiText.T(language, "AdminSecurity")</p>
+        <h1 class="af-title">@UiText.T(language, "UserManagement")</h1>
+        <p class="af-subtitle">@UiText.T(language, "UserManagementHelp")</p>
+    </div>
+    <a asp-action="CreateUser" class="af-btn-primary"><i class="fa-solid fa-user-plus"></i> @UiText.T(language, "CreateUser")</a>
+</div>
+
+@if (TempData["Msg"] != null)
+{
+    <div class="af-alert af-alert-success">@TempData["Msg"]</div>
+}
+
+<div class="af-table-wrap">
+    <table class="af-table">
+        <thead>
+            <tr>
+                <th>@UiText.T(language, "EmailAddress")</th>
+                <th>@UiText.T(language, "Role")</th>
+                <th>@UiText.T(language, "AccountStatus")</th>
+                <th>@UiText.T(language, "Permissions")</th>
+                <th>@UiText.T(language, "Action")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.Users)
+            {
+                <tr>
+                    <td class="font-bold">@user.Username</td>
+                    <td><span class="af-badge af-badge-purple">@(user.Role == "Admin" ? UiText.T(language, "SystemAdministrator") : UiText.T(language, "FinancialManager"))</span></td>
+                    <td><span class="af-badge @(user.IsLocked ? "af-badge-red" : "af-badge-green")">@(user.IsLocked ? UiText.T(language, "Locked") : UiText.T(language, "Active"))</span></td>
+                    <td class="text-sm af-muted">
+                        @if (user.Role == "Admin")
+                        {
+                            <span>@UiText.T(language, "AllPermissions")</span>
+                        }
+                        else if (user.Permissions.Any())
+                        {
+                            <span>@string.Join(", ", user.Permissions.Select(p => UiText.T(language, AppPermissions.All.FirstOrDefault(a => a.Key == p.Permission).LabelKey ?? p.Permission)))</span>
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </td>
+                    <td class="flex flex-wrap gap-2">
+                        <a asp-action="EditUserPermissions" asp-route-id="@user.UserID" class="af-btn-secondary">@UiText.T(language, "EditPermissions")</a>
+                        @if (user.IsLocked)
+                        {
+                            <form asp-action="UnlockUser" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@user.UserID" />
+                                <button type="submit" class="af-btn-secondary">@UiText.T(language, "UnlockUser")</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="LockUser" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@user.UserID" />
+                                <button type="submit" class="af-btn-secondary">@UiText.T(language, "LockUser")</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

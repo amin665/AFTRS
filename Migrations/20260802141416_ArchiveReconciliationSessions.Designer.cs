@@ -4,6 +4,7 @@ using AFTRS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AFTRS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260802141416_ArchiveReconciliationSessions")]
+    partial class ArchiveReconciliationSessions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -180,9 +183,6 @@ namespace AFTRS.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime?>("ReconciledAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -280,10 +280,6 @@ namespace AFTRS.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("DiscrepancyComment")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
                     b.Property<string>("MatchMethod")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
@@ -356,30 +352,6 @@ namespace AFTRS.Migrations
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
-                });
-
-            modelBuilder.Entity("AFTRS.Models.UserPermission", b =>
-                {
-                    b.Property<int>("UserPermissionID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserPermissionID"));
-
-                    b.Property<string>("Permission")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int");
-
-                    b.HasKey("UserPermissionID");
-
-                    b.HasIndex("UserID", "Permission")
-                        .IsUnique();
-
-                    b.ToTable("UserPermissions", (string)null);
                 });
 
             modelBuilder.Entity("AFTRS.Models.BudgetTarget", b =>
@@ -483,22 +455,6 @@ namespace AFTRS.Migrations
                     b.Navigation("MatchedTransaction");
 
                     b.Navigation("Session");
-                });
-
-            modelBuilder.Entity("AFTRS.Models.UserPermission", b =>
-                {
-                    b.HasOne("AFTRS.Models.User", "User")
-                        .WithMany("Permissions")
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AFTRS.Models.User", b =>
-                {
-                    b.Navigation("Permissions");
                 });
 #pragma warning restore 612, 618
         }
