@@ -32,6 +32,7 @@ public class ApplicationDbContext : DbContext
             b.Property(x => x.Username).HasMaxLength(50).IsRequired();
             b.Property(x => x.PasswordHash).HasMaxLength(255).IsRequired();
             b.Property(x => x.Role).HasMaxLength(20).IsRequired();
+            b.Property(x => x.FailedLoginAttempts).IsRequired();
             b.HasIndex(x => x.Username).IsUnique();
         });
 

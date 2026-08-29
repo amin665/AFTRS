@@ -23,5 +23,7 @@ public class User
 
     public bool IsLocked { get; set; }
 
+    public int FailedLoginAttempts { get; set; }
+
     public List<UserPermission> Permissions { get; set; } = new();
 }

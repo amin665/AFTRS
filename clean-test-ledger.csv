@@ -1,0 +1,13 @@
+Transaction Date,Description,Reference Number,Amount,Type
+10/03/2026,Office Supplies March,OFF-0301,180.00,Debit
+15/04/2026,LTT Internet April,LTT-0401,120.00,Debit
+20/05/2026,Travel Taxi May,TRV-0501,90.00,Debit
+18/06/2026,Consulting Income June,INC-0601,2200.00,Credit
+22/07/2026,Office Supplies July,OFF-0701,210.00,Debit
+01/08/2026,Office Supplies Purchase,REF-1001,250.00,Debit
+02/08/2026,Client Payment Alpha,REF-1002,1500.00,Credit
+03/08/2026,LTT Internet Service Fee,REF-1003,120.00,Debit
+04/08/2026,Staff Travel Advance,REF-1004,800.00,Debit
+05/08/2026,Consulting Revenue Beta,REF-1005,2000.00,Credit
+06/08/2026,Unmatched Ledger Expense,REF-1006,430.00,Debit
+07/08/2026,Office Equipment Purchase,REF-1007,700.00,Debit

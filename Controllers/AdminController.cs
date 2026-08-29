@@ -12,6 +12,7 @@ namespace AFTRS.Controllers;
 [RoleAuthorize("Admin")]
 public class AdminController : Controller
 {
+    private const int MaxFailedAttempts = 5;
     private readonly ApplicationDbContext _context;
     private readonly ReconciliationSessionContext _sessions;
 
@@ -157,6 +158,7 @@ public class AdminController : Controller
         if (user == null) return NotFound();
 
         user.IsLocked = true;
+        user.FailedLoginAttempts = MaxFailedAttempts;
         await AddSecurityEventAsync("LockUser");
         await _context.SaveChangesAsync();
 
@@ -174,6 +176,7 @@ public class AdminController : Controller
         if (user == null) return NotFound();
 
         user.IsLocked = false;
+        user.FailedLoginAttempts = 0;
         await AddSecurityEventAsync("UnlockUser");
         await _context.SaveChangesAsync();
 

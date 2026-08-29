@@ -61,23 +61,7 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var lastSuccessAt = user == null
-            ? (DateTime?)null
-            : await _context.SecurityLogs
-                .Where(l => l.Action == "Login" && l.IsSuccess && l.UserID == user.UserID)
-                .OrderByDescending(l => l.Timestamp)
-                .Select(l => (DateTime?)l.Timestamp)
-                .FirstOrDefaultAsync();
-
-        var consecutiveFailures = user == null
-            ? 0
-            : await _context.SecurityLogs.CountAsync(l =>
-                l.Action == "Login" &&
-                !l.IsSuccess &&
-                l.UserID == user.UserID &&
-                (lastSuccessAt == null || l.Timestamp > lastSuccessAt));
-
-        if (user != null && consecutiveFailures >= MaxFailedAttempts)
+        if (user != null && user.FailedLoginAttempts >= MaxFailedAttempts)
         {
             user.IsLocked = true;
             await _context.SecurityLogs.AddAsync(new SecurityLog { UserID = user.UserID, IPAddress = ip, Action = "Login", IsSuccess = false });
@@ -101,7 +85,8 @@ public class AccountController : Controller
 
             if (user != null)
             {
-                if (consecutiveFailures + 1 >= MaxFailedAttempts)
+                user.FailedLoginAttempts++;
+                if (user.FailedLoginAttempts >= MaxFailedAttempts)
                     user.IsLocked = true;
             }
 
@@ -111,6 +96,7 @@ public class AccountController : Controller
         }
 
         await _context.SecurityLogs.AddAsync(new SecurityLog { UserID = validated.UserID, IPAddress = ip, Action = "Login", IsSuccess = true });
+        validated.FailedLoginAttempts = 0;
         await _context.SaveChangesAsync();
 
         var principal = AuthService.CreatePrincipal(validated);
