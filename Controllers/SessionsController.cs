@@ -21,13 +21,29 @@ public class SessionsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1)
     {
+        const int pageSize = 10;
         var selected = await _sessions.GetSelectedAsync();
         ViewBag.SelectedSession = selected;
-        ViewBag.Sessions = await _context.ReconciliationSessions
-            .OrderByDescending(s => s.CreatedAt)
+
+        var query = _context.ReconciliationSessions.OrderByDescending(s => s.CreatedAt);
+        var totalItems = await query.CountAsync();
+        
+        var sessions = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        var pagination = new PaginationMetadata
+        {
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalItems = totalItems
+        };
+
+        ViewBag.Sessions = sessions;
+        ViewBag.Pagination = pagination;
         ViewBag.TransactionCounts = await _context.Transactions
             .GroupBy(t => t.SessionID)
             .Select(g => new { SessionID = g.Key, Count = g.Count() })

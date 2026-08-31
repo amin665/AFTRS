@@ -1,70 +1,31 @@
-@model IEnumerable<AFTRS.Models.SecurityLog>
+@using AFTRS.Models
 @{
     var language = UiText.Language(Context.Request);
-    ViewData["Title"] = UiText.T(language, "SecurityLogs");
-    var users = ViewBag.Users as IEnumerable<AFTRS.Models.User> ?? new List<AFTRS.Models.User>();
-    int? selectedUserId = ViewBag.SelectedUserId as int?;
 }
 
-<div class="af-page-header">
-    <div>
-        <p class="af-kicker">@UiText.T(language, "AdminSecurity")</p>
-        <h1 class="af-title">@UiText.T(language, "SecurityLogsTitle")</h1>
-    </div>
-</div>
-
-<form method="get" class="af-panel mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div><label class="af-kicker mb-2 block">@UiText.T(language, "FilterByDate")</label><input type="date" name="date" value="@ViewBag.SelectedDate" /></div>
-    <div><label class="af-kicker mb-2 block">@UiText.T(language, "FilterByUser")</label><select name="userId"><option value="">@UiText.T(language, "AllUsers")</option>@foreach (var user in users) { <option value="@user.UserID" selected="@(selectedUserId == user.UserID)">@user.Username</option> }</select></div>
-    <div class="flex items-end gap-2"><button type="submit" class="af-btn-primary">@UiText.T(language, "ApplyFilter")</button><a asp-action="SecurityLogs" class="af-btn-secondary">@UiText.T(language, "Clear")</a></div>
-</form>
-
-<div class="af-table-wrap">
-    <table class="af-table">
-        <thead><tr><th>@UiText.T(language, "Timestamp")</th><th>@UiText.T(language, "User")</th><th>@UiText.T(language, "IpAddress")</th><th>@UiText.T(language, "Action")</th><th>@UiText.T(language, "Status")</th></tr></thead>
-        <tbody>
-            @foreach (var log in Model) {
-                <tr>
-                    <td>@log.Timestamp</td>
-                    <td class="font-bold">@log.User?.Username</td>
-                    <td class="font-mono text-xs af-muted">@log.IPAddress</td>
-                    <td>@log.Action</td>
-                    <td><span class="af-badge @(log.IsSuccess ? "af-badge-green" : "af-badge-red")">@(log.IsSuccess ? UiText.T(language, "Success") : UiText.T(language, "Failed"))</span></td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-@{
-    var pagination = ViewBag.Pagination as AFTRS.Models.PaginationMetadata;
-    var dateParam = ViewBag.SelectedDate != null ? $"&date={ViewBag.SelectedDate}" : "";
-    var userParam = ViewBag.SelectedUserId != null ? $"&userId={ViewBag.SelectedUserId}" : "";
-}
-
-@if (pagination != null && pagination.TotalPages > 1)
+@if (Model != null && Model.TotalPages > 1)
 {
     <div class="af-pagination-container mt-6">
         <div class="flex items-center justify-between flex-wrap gap-4">
             <!-- Pagination Info -->
             <div class="af-muted text-sm">
-                @UiText.T(language, "Page") <strong>@pagination.CurrentPage</strong> @UiText.T(language, "Of") <strong>@pagination.TotalPages</strong>
-                (@pagination.StartRowNumber - @pagination.EndRowNumber @UiText.T(language, "Of") @pagination.TotalItems)
+                @UiText.T(language, "Page") <strong>@Model.CurrentPage</strong> @UiText.T(language, "Of") <strong>@Model.TotalPages</strong>
+                (@Model.StartRowNumber - @Model.EndRowNumber @UiText.T(language, "Of") @Model.TotalItems)
             </div>
 
             <!-- Pagination Controls -->
             <nav class="af-pagination-nav" aria-label="Pagination navigation">
                 <ul class="af-pagination-list">
                     <!-- Previous Button -->
-                    @if (pagination.HasPreviousPage)
+                    @if (Model.HasPreviousPage)
                     {
                         <li class="af-pagination-item">
-                            <a class="af-pagination-link" href="?page=1@dateParam@userParam" title="First page">
+                            <a class="af-pagination-link" href="?page=1" title="First page">
                                 <i class="fa-solid fa-angle-double-left"></i>
                             </a>
                         </li>
                         <li class="af-pagination-item">
-                            <a class="af-pagination-link" href="?page=@(pagination.CurrentPage - 1)@dateParam@userParam" title="Previous page">
+                            <a class="af-pagination-link" href="?page=@(Model.CurrentPage - 1)" title="Previous page">
                                 <i class="fa-solid fa-angle-left"></i>
                             </a>
                         </li>
@@ -85,13 +46,13 @@
 
                     <!-- Page Numbers -->
                     @{
-                        int startPage = Math.Max(1, pagination.CurrentPage - 2);
-                        int endPage = Math.Min(pagination.TotalPages, pagination.CurrentPage + 2);
+                        int startPage = Math.Max(1, Model.CurrentPage - 2);
+                        int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
 
                         if (startPage > 1)
                         {
                             <li class="af-pagination-item">
-                                <a class="af-pagination-link" href="?page=1@dateParam@userParam">1</a>
+                                <a class="af-pagination-link" href="?page=1">1</a>
                             </li>
                             if (startPage > 2)
                             {
@@ -103,7 +64,7 @@
 
                         for (int i = startPage; i <= endPage; i++)
                         {
-                            if (i == pagination.CurrentPage)
+                            if (i == Model.CurrentPage)
                             {
                                 <li class="af-pagination-item">
                                     <span class="af-pagination-link af-pagination-active" aria-current="page">@i</span>
@@ -112,35 +73,35 @@
                             else
                             {
                                 <li class="af-pagination-item">
-                                    <a class="af-pagination-link" href="?page=@i@dateParam@userParam">@i</a>
+                                    <a class="af-pagination-link" href="?page=@i">@i</a>
                                 </li>
                             }
                         }
 
-                        if (endPage < pagination.TotalPages)
+                        if (endPage < Model.TotalPages)
                         {
-                            if (endPage < pagination.TotalPages - 1)
+                            if (endPage < Model.TotalPages - 1)
                             {
                                 <li class="af-pagination-item af-pagination-ellipsis">
                                     <span>...</span>
                                 </li>
                             }
                             <li class="af-pagination-item">
-                                <a class="af-pagination-link" href="?page=@pagination.TotalPages@dateParam@userParam">@pagination.TotalPages</a>
+                                <a class="af-pagination-link" href="?page=@Model.TotalPages">@Model.TotalPages</a>
                             </li>
                         }
                     }
 
                     <!-- Next Button -->
-                    @if (pagination.HasNextPage)
+                    @if (Model.HasNextPage)
                     {
                         <li class="af-pagination-item">
-                            <a class="af-pagination-link" href="?page=@(pagination.CurrentPage + 1)@dateParam@userParam" title="Next page">
+                            <a class="af-pagination-link" href="?page=@(Model.CurrentPage + 1)" title="Next page">
                                 <i class="fa-solid fa-angle-right"></i>
                             </a>
                         </li>
                         <li class="af-pagination-item">
-                            <a class="af-pagination-link" href="?page=@pagination.TotalPages@dateParam@userParam" title="Last page">
+                            <a class="af-pagination-link" href="?page=@Model.TotalPages" title="Last page">
                                 <i class="fa-solid fa-angle-double-right"></i>
                             </a>
                         </li>

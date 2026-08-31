@@ -185,9 +185,11 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> SecurityLogs(DateTime? date, int? userId)
+    public async Task<IActionResult> SecurityLogs(DateTime? date, int? userId, int page = 1)
     {
+        const int pageSize = 10;
         var query = _context.SecurityLogs.Include(l => l.User).AsQueryable();
+        
         if (date.HasValue)
         {
             var start = date.Value.Date;
@@ -197,27 +199,55 @@ public class AdminController : Controller
         if (userId.HasValue)
             query = query.Where(l => l.UserID == userId.Value);
 
+        var totalItems = await query.CountAsync();
+        var logs = await query
+            .OrderByDescending(l => l.Timestamp)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var pagination = new PaginationMetadata
+        {
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalItems = totalItems
+        };
+
         ViewBag.Users = await _context.Users.OrderBy(u => u.Username).ToListAsync();
         ViewBag.SelectedDate = date?.ToString("yyyy-MM-dd");
         ViewBag.SelectedUserId = userId;
-
-        var logs = await query.OrderByDescending(l => l.Timestamp).ToListAsync();
+        ViewBag.Pagination = pagination;
 
         return View(logs);
     }
 
     [HttpGet]
-    public async Task<IActionResult> AuditTrail()
+    public async Task<IActionResult> AuditTrail(int page = 1)
     {
+        const int pageSize = 10;
         var session = await _sessions.GetSelectedAsync();
         ViewBag.Session = session;
-        var trail = await _context.FinancialAuditLogs
+
+        var query = _context.FinancialAuditLogs
             .Where(a => a.SessionID == session.SessionID)
             .Include(a => a.User)
-            .Include(a => a.Transaction)
+            .Include(a => a.Transaction);
+
+        var totalItems = await query.CountAsync();
+        var trail = await query
             .OrderByDescending(a => a.Timestamp)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
+        var pagination = new PaginationMetadata
+        {
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalItems = totalItems
+        };
+
+        ViewBag.Pagination = pagination;
         return View(trail);
     }
 

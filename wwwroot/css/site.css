@@ -449,3 +449,111 @@ html[data-theme="dark"] .divide-y > :not([hidden]) ~ :not([hidden]) { border-col
   .af-page { padding: 1rem; }
   .af-page-header { flex-direction: column; }
 }
+
+/* Pagination Styles */
+.af-pagination-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--af-surface);
+  border: 1px solid var(--af-border);
+  border-radius: var(--af-radius);
+  box-shadow: var(--af-shadow);
+}
+
+.af-pagination-nav {
+  display: flex;
+  justify-content: center;
+}
+
+.af-pagination-list {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.af-pagination-item {
+  display: flex;
+  align-items: center;
+}
+
+.af-pagination-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.4rem 0.6rem;
+  color: var(--af-text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  background: color-mix(in srgb, var(--af-bg-soft) 68%, transparent);
+  border: 1px solid var(--af-border);
+  border-radius: 0.7rem;
+  transition: 140ms ease;
+  cursor: pointer;
+}
+
+.af-pagination-link:hover:not(.af-pagination-disabled):not(.af-pagination-active),
+.af-pagination-link:focus:not(.af-pagination-disabled):not(.af-pagination-active) {
+  color: #03101c;
+  background: linear-gradient(135deg, var(--af-cyan), #a78bfa);
+  border-color: rgba(4, 217, 255, 0.55);
+  box-shadow: 0 0 24px rgba(4, 217, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.af-pagination-active {
+  color: #03101c !important;
+  background: linear-gradient(135deg, var(--af-cyan), #a78bfa) !important;
+  border-color: rgba(4, 217, 255, 0.55) !important;
+  box-shadow: 0 0 24px rgba(4, 217, 255, 0.28) !important;
+  cursor: default;
+  pointer-events: none;
+}
+
+.af-pagination-disabled {
+  color: var(--af-muted);
+  background: color-mix(in srgb, var(--af-bg-soft) 45%, transparent);
+  border-color: var(--af-border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.af-pagination-ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  color: var(--af-muted);
+  font-weight: 700;
+}
+
+.af-pagination-link i {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 767px) {
+  .af-pagination-container {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .af-pagination-list {
+    gap: 0.25rem;
+  }
+
+  .af-pagination-link {
+    min-width: 2.2rem;
+    height: 2.2rem;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.4rem;
+  }
+}

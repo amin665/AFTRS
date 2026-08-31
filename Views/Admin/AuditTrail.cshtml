@@ -31,3 +31,129 @@
         </tbody>
     </table>
 </div>
+
+@{
+    var pagination = ViewBag.Pagination as AFTRS.Models.PaginationMetadata;
+}
+
+@if (pagination != null && pagination.TotalPages > 1)
+{
+    <div class="af-pagination-container mt-6">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+            <!-- Pagination Info -->
+            <div class="af-muted text-sm">
+                @UiText.T(language, "Page") <strong>@pagination.CurrentPage</strong> @UiText.T(language, "Of") <strong>@pagination.TotalPages</strong>
+                (@pagination.StartRowNumber - @pagination.EndRowNumber @UiText.T(language, "Of") @pagination.TotalItems)
+            </div>
+
+            <!-- Pagination Controls -->
+            <nav class="af-pagination-nav" aria-label="Pagination navigation">
+                <ul class="af-pagination-list">
+                    <!-- Previous Button -->
+                    @if (pagination.HasPreviousPage)
+                    {
+                        <li class="af-pagination-item">
+                            <a class="af-pagination-link" href="?page=1" title="First page">
+                                <i class="fa-solid fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="af-pagination-item">
+                            <a class="af-pagination-link" href="?page=@(pagination.CurrentPage - 1)" title="Previous page">
+                                <i class="fa-solid fa-angle-left"></i>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="af-pagination-item">
+                            <span class="af-pagination-link af-pagination-disabled">
+                                <i class="fa-solid fa-angle-double-left"></i>
+                            </span>
+                        </li>
+                        <li class="af-pagination-item">
+                            <span class="af-pagination-link af-pagination-disabled">
+                                <i class="fa-solid fa-angle-left"></i>
+                            </span>
+                        </li>
+                    }
+
+                    <!-- Page Numbers -->
+                    @{
+                        int startPage = Math.Max(1, pagination.CurrentPage - 2);
+                        int endPage = Math.Min(pagination.TotalPages, pagination.CurrentPage + 2);
+
+                        if (startPage > 1)
+                        {
+                            <li class="af-pagination-item">
+                                <a class="af-pagination-link" href="?page=1">1</a>
+                            </li>
+                            if (startPage > 2)
+                            {
+                                <li class="af-pagination-item af-pagination-ellipsis">
+                                    <span>...</span>
+                                </li>
+                            }
+                        }
+
+                        for (int i = startPage; i <= endPage; i++)
+                        {
+                            if (i == pagination.CurrentPage)
+                            {
+                                <li class="af-pagination-item">
+                                    <span class="af-pagination-link af-pagination-active" aria-current="page">@i</span>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="af-pagination-item">
+                                    <a class="af-pagination-link" href="?page=@i">@i</a>
+                                </li>
+                            }
+                        }
+
+                        if (endPage < pagination.TotalPages)
+                        {
+                            if (endPage < pagination.TotalPages - 1)
+                            {
+                                <li class="af-pagination-item af-pagination-ellipsis">
+                                    <span>...</span>
+                                </li>
+                            }
+                            <li class="af-pagination-item">
+                                <a class="af-pagination-link" href="?page=@pagination.TotalPages">@pagination.TotalPages</a>
+                            </li>
+                        }
+                    }
+
+                    <!-- Next Button -->
+                    @if (pagination.HasNextPage)
+                    {
+                        <li class="af-pagination-item">
+                            <a class="af-pagination-link" href="?page=@(pagination.CurrentPage + 1)" title="Next page">
+                                <i class="fa-solid fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="af-pagination-item">
+                            <a class="af-pagination-link" href="?page=@pagination.TotalPages" title="Last page">
+                                <i class="fa-solid fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="af-pagination-item">
+                            <span class="af-pagination-link af-pagination-disabled">
+                                <i class="fa-solid fa-angle-right"></i>
+                            </span>
+                        </li>
+                        <li class="af-pagination-item">
+                            <span class="af-pagination-link af-pagination-disabled">
+                                <i class="fa-solid fa-angle-double-right"></i>
+                            </span>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    </div>
+}
