@@ -21,7 +21,6 @@ public class AccountController : Controller
 
     private static bool IsPasswordComplexEnough(string password)
     {
-        // SRS UC-02: validate password complexity (minimal, deterministic rules).
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8) return false;
         bool hasUpper = false, hasLower = false, hasDigit = false, hasSymbol = false;
         foreach (var ch in password)

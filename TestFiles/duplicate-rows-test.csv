@@ -1,0 +1,6 @@
+Transaction Date,Description,Reference Number,Amount
+01/08/2026,Duplicate row one,DUPROW-001,100.00
+01/08/2026,Duplicate row one,DUPROW-001,100.00
+02/08/2026,Duplicate row two,DUPROW-002,200.00
+02/08/2026,Duplicate row two,DUPROW-002,200.00
+03/08/2026,Unique row,DUPROW-003,300.00

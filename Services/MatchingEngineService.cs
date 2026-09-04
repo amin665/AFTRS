@@ -46,6 +46,32 @@ public class MatchingEngineService
         return 1m - ((decimal)distance / maxLen);
     }
 
+    private static decimal DescriptionSimilarity(string a, string b)
+    {
+        return Math.Max(SimilarityRatio(a, b), TokenSimilarityRatio(a, b));
+    }
+
+    private static decimal TokenSimilarityRatio(string a, string b)
+    {
+        var left = Tokenize(a);
+        var right = Tokenize(b);
+        if (left.Count == 0 || right.Count == 0) return 0m;
+
+        var overlap = left.Intersect(right, StringComparer.OrdinalIgnoreCase).Count();
+        var totalUnique = left.Union(right, StringComparer.OrdinalIgnoreCase).Count();
+        return totalUnique == 0 ? 0m : (decimal)overlap / totalUnique;
+    }
+
+    private static HashSet<string> Tokenize(string value)
+    {
+        return value
+            .ToLowerInvariant()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(token => new string(token.Where(char.IsLetterOrDigit).ToArray()))
+            .Where(token => token.Length > 0)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
     public async Task<int> RunReconciliationAsync(int sessionId)
     {
         // Memory constraint from SRS: process in batches of 1,000 ledger rows.
@@ -94,7 +120,7 @@ public class MatchingEngineService
                 var fuzzy = bank.FirstOrDefault(b =>
                     b.Status == "Discrepancy" &&
                     decimal.Abs(b.Amount - l.Amount) <= _tolerance &&
-                    SimilarityRatio(l.Description, b.Description) > 0.80m);
+                    DescriptionSimilarity(l.Description, b.Description) > 0.80m);
 
                 if (fuzzy != null)
                 {

@@ -1,0 +1,75 @@
+Transaction Date,Description,Reference Number,Amount
+01/08/2026,Payroll August,REF-1001,1500.00
+01/08/2026,Office Rent August,REF-1002,950.00
+02/08/2026,Electricity Bill,REF-1003,300.00
+02/08/2026,Internet Subscription,REF-1004,120.00
+03/08/2026,Office Supplies Purchase,REF-1005,85.50
+03/08/2026,Marketing Campaign,REF-1006,600.00
+04/08/2026,Client Payment Alpha,REF-1007,2200.00
+04/08/2026,Client Payment Beta,REF-1008,1750.00
+05/08/2026,Maintenance Service,REF-1009,250.00
+05/08/2026,Software License Renewal,REF-1010,400.00
+06/08/2026,Travel Reimbursement,REF-1011,320.75
+06/08/2026,Training Workshop,REF-1012,700.00
+07/08/2026,Consulting Revenue,REF-1013,3100.00
+07/08/2026,Stationery Order,REF-1014,45.25
+08/08/2026,Insurance Premium,REF-1015,520.00
+08/08/2026,Petty Cash Top Up,REF-1016,150.00
+09/08/2026,Equipment Purchase,REF-1017,1250.00
+09/08/2026,Bank Service Fee,REF-1018,25.00
+10/08/2026,Customer Refund,REF-1019,180.00
+10/08/2026,Sales Deposit,REF-1020,2750.00
+11/08/2026,Payroll Tax Payment,REF-1021,430.00
+11/08/2026,Office Cleaning,REF-1022,110.00
+12/08/2026,Cloud Hosting Fee,REF-1023,210.00
+12/08/2026,Security Service,REF-1024,330.00
+13/08/2026,Client Payment Gamma,REF-1025,1900.00
+13/08/2026,Marketing Materials,REF-1026,260.00
+14/08/2026,Water Bill,REF-1027,75.00
+14/08/2026,Telephone Bill,REF-1028,95.00
+15/08/2026,Office Furniture,REF-1029,880.00
+15/08/2026,Interest Income,REF-1030,60.00
+16/08/2026,Office Rent Payment,REF-2001,950.00
+16/08/2026,Electric Utility Payment,REF-2002,305.00
+17/08/2026,Internet Monthly Charge,REF-2003,120.00
+17/08/2026,Marketing Online Ads,REF-2004,610.00
+18/08/2026,Software Annual Licence,REF-2005,400.00
+18/08/2026,Travel Expense Reimburse,REF-2006,320.75
+19/08/2026,Training Course Payment,REF-2007,700.00
+19/08/2026,Consulting Client Income,REF-2008,3100.00
+20/08/2026,Insurance Monthly Premium,REF-2009,520.00
+20/08/2026,Equipment Laptop Purchase,REF-2010,1250.00
+21/08/2026,Office Supply Order,REF-2011,85.50
+21/08/2026,Maintenance Contractor Fee,REF-2012,250.00
+22/08/2026,Sales Customer Deposit,REF-2013,2750.00
+22/08/2026,Cloud Server Hosting,REF-2014,210.00
+23/08/2026,Security Guard Service,REF-2015,330.00
+23/08/2026,Marketing Print Materials,REF-2016,260.00
+24/08/2026,Telephone Monthly Bill,REF-2017,95.00
+24/08/2026,Water Utility Bill,REF-2018,75.00
+25/08/2026,Office Chair Purchase,REF-2019,880.00
+25/08/2026,Bank Interest Received,REF-2020,60.00
+26/08/2026,Ledger Only Expense One,REF-3001,111.00
+26/08/2026,Ledger Only Expense Two,REF-3002,222.00
+27/08/2026,Ledger Only Expense Three,REF-3003,333.00
+27/08/2026,Ledger Only Expense Four,REF-3004,444.00
+28/08/2026,Ledger Only Expense Five,REF-3005,555.00
+28/08/2026,Ledger Only Expense Six,REF-3006,666.00
+29/08/2026,Ledger Only Expense Seven,REF-3007,777.00
+29/08/2026,Ledger Only Expense Eight,REF-3008,888.00
+30/08/2026,Ledger Only Expense Nine,REF-3009,999.00
+30/08/2026,Ledger Only Expense Ten,REF-3010,1010.00
+31/08/2026,Duplicate Ledger Sample,REF-DUP-1,123.45
+31/08/2026,Duplicate Ledger Sample,REF-DUP-1,123.45
+31/08/2026,Duplicate Ledger Sample Two,REF-DUP-2,543.21
+31/08/2026,Duplicate Ledger Sample Two,REF-DUP-2,543.21
+01/09/2026,Payroll September,REF-1031,1520.00
+01/09/2026,Office Rent September,REF-1032,950.00
+02/09/2026,Electricity Bill September,REF-1033,315.00
+02/09/2026,Internet Subscription September,REF-1034,120.00
+03/09/2026,Office Supplies September,REF-1035,92.00
+03/09/2026,Marketing Campaign September,REF-1036,640.00
+04/09/2026,Client Payment Delta,REF-1037,2400.00
+04/09/2026,Client Payment Epsilon,REF-1038,1850.00
+05/09/2026,Maintenance Service September,REF-1039,265.00
+05/09/2026,Software License Extra,REF-1040,410.00

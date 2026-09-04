@@ -18,10 +18,13 @@ public class HomeController : Controller
     }
 
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         if (User?.Identity?.IsAuthenticated != true)
-            return RedirectToAction("Login", "Account");
+        {
+            var adminExists = await _context.Users.AnyAsync(u => u.Role == "Admin");
+            return RedirectToAction(adminExists ? "Login" : "Register", "Account");
+        }
 
         var role = User.FindFirst(AuthConstants.RoleClaimType)?.Value;
         if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
